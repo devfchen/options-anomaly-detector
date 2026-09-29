@@ -1,11 +1,12 @@
 name: Daily Options Analysis
 
 on:
-  # Daily scheduled run starting at 6:00 PM Beijing Time
-  # Retry hourly until 9:00 PM if data not yet available
+  # Daily scheduled run starting at 6:17 PM Beijing Time, retry hourly until 11:17 PM
   # If already processed, subsequent runs will skip automatically
+  # 避开整点：GitHub 整点 schedule 延迟 4-8h 且经常整次丢弃（2026-09 实测每天 4 次只触发 1 次）
+  # 主触发在 oci-jp 的 systemd timer（ai-infra/runners/gh-runner/dispatch），这里只是兜底
   schedule:
-    - cron: '0 10-13 * * *'  # 18:00-21:00 Beijing Time / 10:00-13:00 UTC
+    - cron: '17 10-15 * * *'  # 18:17-23:17 Beijing Time / 10:17-15:17 UTC
 
   # Allow manual trigger
   workflow_dispatch:
@@ -28,6 +29,11 @@ on:
       - 'src/**'
       - 'main.py'
       - '.github/workflows/**'
+
+# 外部 timer + schedule 兜底可能同时触发：排队串行，后到的会看到数据已发布而跳过
+concurrency:
+  group: daily-analysis
+  cancel-in-progress: false
 
 jobs:
   # Job 1: 数据下载与分析
