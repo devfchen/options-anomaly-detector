@@ -5,11 +5,14 @@ AI Analyzer Module
 """
 import os
 import json
+import time
 from typing import Dict, List, Optional
 
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-# 免费档没有 Pro 配额；最新 Flash 高峰期常 503，依次回退
-GEMINI_MODELS = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash"]
+# 免费档没有 Pro 配额；Flash 高峰期常 503，依次回退，最后用负载低的 Flash-Lite 兜底
+GEMINI_MODELS = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-3.1-flash-lite"]
+GEMINI_ROUNDS = 3          # 整轮都失败时隔一会儿再来
+GEMINI_ROUND_WAIT = 60     # 秒
 
 
 class AIAnalyzer:
@@ -50,14 +53,18 @@ class AIAnalyzer:
         # Gemini 3.x 是思考模型，max_tokens 会被思考吃掉导致正文截断，去掉
         kwargs.pop('max_tokens', None)
         last_error = None
-        for model in self.models:
-            try:
-                response = self.client.chat.completions.create(model=model, **kwargs)
-                print(f"   🤖 AI model: {model}")
-                return response
-            except Exception as e:
-                print(f"   ⚠️  {model} failed: {str(e)[:120]}")
-                last_error = e
+        for round_no in range(GEMINI_ROUNDS):
+            if round_no:
+                print(f"   ⏳ All Gemini models busy, retrying in {GEMINI_ROUND_WAIT}s ({round_no + 1}/{GEMINI_ROUNDS})")
+                time.sleep(GEMINI_ROUND_WAIT)
+            for model in self.models:
+                try:
+                    response = self.client.chat.completions.create(model=model, **kwargs)
+                    print(f"   🤖 AI model: {model}")
+                    return response
+                except Exception as e:
+                    print(f"   ⚠️  {model} failed: {str(e)[:120]}")
+                    last_error = e
         raise last_error
 
     def is_available(self) -> bool:
