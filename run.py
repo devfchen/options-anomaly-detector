@@ -251,7 +251,8 @@ def test_email_command(args):
 
     # Run test_email.py
     import test_email
-    test_email.main()
+    if not test_email.test_email():
+        sys.exit(1)
 
     print()
     print("=" * 80)
