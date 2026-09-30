@@ -1,6 +1,6 @@
 {
   "date": "2026-09-29",
-  "generated_at": "2026-09-30T10:46:32.425007",
+  "generated_at": "2026-09-30T16:59:00.044717",
   "tickers_count": 4377,
   "anomalies_count": 3300,
   "data_source": "CSV+API",
@@ -338,10 +338,10 @@
       "contracts_count": 2087,
       "put_contracts": 954,
       "call_contracts": 1133,
-      "total_oi": 10253932,
+      "total_oi": 9990333,
       "put_oi": 4486749,
-      "call_oi": 5767183,
-      "cp_oi_ratio": 1.29,
+      "call_oi": 5503584,
+      "cp_oi_ratio": 1.23,
       "leap_cp_ratio": 1.49,
       "top_3_contracts_volume": [
         {
@@ -402,7 +402,7 @@
           "strike": 200,
           "expiry": "2027-01-15",
           "type": "call",
-          "percentage": 2.8
+          "percentage": 2.9
         },
         {
           "ticker": "O:NVDA270115P00100000",
@@ -410,7 +410,7 @@
           "strike": 100,
           "expiry": "2027-01-15",
           "type": "put",
-          "percentage": 1.8
+          "percentage": 1.9
         },
         {
           "ticker": "O:NVDA270115P00180000",
@@ -418,7 +418,7 @@
           "strike": 180,
           "expiry": "2027-01-15",
           "type": "put",
-          "percentage": 1.4
+          "percentage": 1.5
         }
       ],
       "top_3_leap_oi": [
@@ -428,7 +428,7 @@
           "strike": 200,
           "expiry": "2027-01-15",
           "type": "call",
-          "percentage": 2.8
+          "percentage": 2.9
         },
         {
           "ticker": "O:NVDA270115P00100000",
@@ -436,7 +436,7 @@
           "strike": 100,
           "expiry": "2027-01-15",
           "type": "put",
-          "percentage": 1.8
+          "percentage": 1.9
         },
         {
           "ticker": "O:NVDA270115P00180000",
@@ -444,23 +444,23 @@
           "strike": 180,
           "expiry": "2027-01-15",
           "type": "put",
-          "percentage": 1.4
+          "percentage": 1.5
         }
       ],
       "strike_concentration": {
         "range": "200-220",
         "oi": 1576749,
-        "percentage": 15.4,
+        "percentage": 15.8,
         "dominant_strike": 200
       },
       "history": {
         "appearances": 10,
         "appearance_rate": 100.0,
-        "avg_rank": 4.7,
+        "avg_rank": 4.6,
         "best_rank": 4,
         "worst_rank": 6,
         "today_rank": 4,
-        "rank_change": 1,
+        "rank_change": 0,
         "trend": "stable",
         "streak": 10,
         "icon": "[HOT]"
@@ -479,9 +479,9 @@
       "contracts_count": 1325,
       "put_contracts": 589,
       "call_contracts": 736,
-      "total_oi": 13854903,
+      "total_oi": 13824222,
       "put_oi": 4493326,
-      "call_oi": 9361577,
+      "call_oi": 9330896,
       "cp_oi_ratio": 2.08,
       "leap_cp_ratio": 2.02,
       "top_3_contracts_volume": [
@@ -590,18 +590,18 @@
       ],
       "strike_concentration": {
         "range": "90-100",
-        "oi": 2249305,
+        "oi": 2242982,
         "percentage": 16.2,
         "dominant_strike": 90
       },
       "history": {
         "appearances": 10,
         "appearance_rate": 100.0,
-        "avg_rank": 12.5,
-        "best_rank": 7,
+        "avg_rank": 11.9,
+        "best_rank": 5,
         "worst_rank": 24,
-        "today_rank": 7,
-        "rank_change": 0,
+        "today_rank": 5,
+        "rank_change": 2,
         "trend": "rising",
         "streak": 10,
         "icon": "[HOT]"
@@ -620,10 +620,10 @@
       "contracts_count": 1880,
       "put_contracts": 943,
       "call_contracts": 937,
-      "total_oi": 3405763,
-      "put_oi": 2221464,
-      "call_oi": 1184299,
-      "cp_oi_ratio": 0.53,
+      "total_oi": 3198517,
+      "put_oi": 2068897,
+      "call_oi": 1129620,
+      "cp_oi_ratio": 0.55,
       "leap_cp_ratio": 0.26,
       "top_3_contracts_volume": [
         {
@@ -684,7 +684,7 @@
           "strike": 275,
           "expiry": "2026-10-16",
           "type": "put",
-          "percentage": 4.0
+          "percentage": 4.3
         },
         {
           "ticker": "O:IWM261016P00280000",
@@ -692,7 +692,7 @@
           "strike": 280,
           "expiry": "2026-10-16",
           "type": "put",
-          "percentage": 2.9
+          "percentage": 3.0
         },
         {
           "ticker": "O:IWM261016P00272000",
@@ -700,20 +700,20 @@
           "strike": 272,
           "expiry": "2026-10-16",
           "type": "put",
-          "percentage": 2.7
+          "percentage": 2.9
         }
       ],
       "top_3_leap_oi": [],
       "strike_concentration": {
         "range": "260-280",
-        "oi": 1536817,
-        "percentage": 45.1,
+        "oi": 1411684,
+        "percentage": 44.1,
         "dominant_strike": 275
       },
       "history": {
         "appearances": 10,
         "appearance_rate": 100.0,
-        "avg_rank": 5.8,
+        "avg_rank": 6.0,
         "best_rank": 4,
         "worst_rank": 10,
         "today_rank": 6,
@@ -736,10 +736,10 @@
       "contracts_count": 2623,
       "put_contracts": 1133,
       "call_contracts": 1490,
-      "total_oi": 2603913,
-      "put_oi": 1202994,
+      "total_oi": 2520726,
+      "put_oi": 1119807,
       "call_oi": 1400919,
-      "cp_oi_ratio": 1.16,
+      "cp_oi_ratio": 1.25,
       "leap_cp_ratio": 1.32,
       "top_3_contracts_volume": [
         {
@@ -808,7 +808,7 @@
           "strike": 150,
           "expiry": "2026-10-02",
           "type": "put",
-          "percentage": 0.9
+          "percentage": 1.0
         },
         {
           "ticker": "O:TSLA261002P00235000",
@@ -822,18 +822,18 @@
       "top_3_leap_oi": [],
       "strike_concentration": {
         "range": "400-420",
-        "oi": 179023,
-        "percentage": 6.9,
+        "oi": 167536,
+        "percentage": 6.6,
         "dominant_strike": 400
       },
       "history": {
         "appearances": 10,
         "appearance_rate": 100.0,
-        "avg_rank": 4.9,
+        "avg_rank": 5.0,
         "best_rank": 4,
-        "worst_rank": 6,
-        "today_rank": 5,
-        "rank_change": -1,
+        "worst_rank": 7,
+        "today_rank": 7,
+        "rank_change": -2,
         "trend": "stable",
         "streak": 10,
         "icon": "[HOT]"
@@ -970,13 +970,13 @@
       "history": {
         "appearances": 9,
         "appearance_rate": 90.0,
-        "avg_rank": 15.8,
+        "avg_rank": 14.8,
         "best_rank": 8,
         "worst_rank": 29,
-        "today_rank": 12,
-        "rank_change": 5,
+        "today_rank": 8,
+        "rank_change": 4,
         "trend": "rising",
-        "streak": 5,
+        "streak": 6,
         "icon": "[HOT]"
       },
       "original_rank": 4,
@@ -993,10 +993,10 @@
       "contracts_count": 1768,
       "put_contracts": 812,
       "call_contracts": 956,
-      "total_oi": 4215204,
+      "total_oi": 4165964,
       "put_oi": 1758940,
-      "call_oi": 2456264,
-      "cp_oi_ratio": 1.4,
+      "call_oi": 2407024,
+      "cp_oi_ratio": 1.37,
       "leap_cp_ratio": 1.96,
       "top_3_contracts_volume": [
         {
@@ -1057,7 +1057,7 @@
           "strike": 340,
           "expiry": "2026-10-16",
           "type": "call",
-          "percentage": 2.5
+          "percentage": 2.6
         },
         {
           "ticker": "O:AAPL270115C00300000",
@@ -1104,18 +1104,18 @@
       ],
       "strike_concentration": {
         "range": "300-320",
-        "oi": 561875,
-        "percentage": 13.3,
+        "oi": 559247,
+        "percentage": 13.4,
         "dominant_strike": 300
       },
       "history": {
         "appearances": 10,
         "appearance_rate": 100.0,
-        "avg_rank": 9.0,
+        "avg_rank": 8.6,
         "best_rank": 7,
-        "worst_rank": 13,
-        "today_rank": 8,
-        "rank_change": 0,
+        "worst_rank": 11,
+        "today_rank": 9,
+        "rank_change": -1,
         "trend": "stable",
         "streak": 10,
         "icon": "[HOT]"
@@ -1134,10 +1134,10 @@
       "contracts_count": 3354,
       "put_contracts": 1462,
       "call_contracts": 1892,
-      "total_oi": 781161,
-      "put_oi": 199865,
-      "call_oi": 581296,
-      "cp_oi_ratio": 2.91,
+      "total_oi": 470117,
+      "put_oi": 194580,
+      "call_oi": 275537,
+      "cp_oi_ratio": 1.42,
       "leap_cp_ratio": 1.49,
       "top_3_contracts_volume": [
         {
@@ -1193,41 +1193,41 @@
       ],
       "top_3_oi": [
         {
-          "ticker": "O:META261016C00700000",
-          "oi": 21408,
-          "strike": 700,
-          "expiry": "2026-10-16",
-          "type": "call",
-          "percentage": 2.7
-        },
-        {
-          "ticker": "O:META261016C00825000",
-          "oi": 20715,
-          "strike": 825,
-          "expiry": "2026-10-16",
-          "type": "call",
-          "percentage": 2.7
-        },
-        {
-          "ticker": "O:META261016C00800000",
-          "oi": 20078,
+          "ticker": "O:META261002C00800000",
+          "oi": 16278,
           "strike": 800,
-          "expiry": "2026-10-16",
+          "expiry": "2026-10-02",
           "type": "call",
-          "percentage": 2.6
+          "percentage": 3.5
+        },
+        {
+          "ticker": "O:META260930C00750000",
+          "oi": 9753,
+          "strike": 750,
+          "expiry": "2026-09-30",
+          "type": "call",
+          "percentage": 2.1
+        },
+        {
+          "ticker": "O:META260930P00680000",
+          "oi": 8510,
+          "strike": 680,
+          "expiry": "2026-09-30",
+          "type": "put",
+          "percentage": 1.8
         }
       ],
       "top_3_leap_oi": [],
       "strike_concentration": {
         "range": "800-850",
-        "oi": 116815,
-        "percentage": 15.0,
+        "oi": 54785,
+        "percentage": 11.7,
         "dominant_strike": 800
       },
       "history": {
         "appearances": 10,
         "appearance_rate": 100.0,
-        "avg_rank": 11.0,
+        "avg_rank": 11.1,
         "best_rank": 6,
         "worst_rank": 19,
         "today_rank": 10,
@@ -1250,10 +1250,10 @@
       "contracts_count": 1416,
       "put_contracts": 615,
       "call_contracts": 801,
-      "total_oi": 3615935,
+      "total_oi": 3660434,
       "put_oi": 1925141,
-      "call_oi": 1690794,
-      "cp_oi_ratio": 0.88,
+      "call_oi": 1735293,
+      "cp_oi_ratio": 0.9,
       "leap_cp_ratio": 0.71,
       "top_3_contracts_volume": [
         {
@@ -1318,11 +1318,11 @@
         },
         {
           "ticker": "O:SPCX261016C00160000",
-          "oi": 35237,
+          "oi": 42179,
           "strike": 160,
           "expiry": "2026-10-16",
           "type": "call",
-          "percentage": 1.0
+          "percentage": 1.2
         },
         {
           "ticker": "O:SPCX270115C00200000",
@@ -1361,19 +1361,19 @@
       ],
       "strike_concentration": {
         "range": "150-160",
-        "oi": 356571,
-        "percentage": 9.9,
+        "oi": 370067,
+        "percentage": 10.1,
         "dominant_strike": 150
       },
       "history": {
         "appearances": 10,
         "appearance_rate": 100.0,
-        "avg_rank": 12.3,
+        "avg_rank": 12.6,
         "best_rank": 7,
         "worst_rank": 17,
-        "today_rank": 15,
-        "rank_change": -1,
-        "trend": "falling",
+        "today_rank": 11,
+        "rank_change": 4,
+        "trend": "stable",
         "streak": 10,
         "icon": "[HOT]"
       },
@@ -1509,13 +1509,13 @@
       "history": {
         "appearances": 7,
         "appearance_rate": 70.0,
-        "avg_rank": 21.0,
-        "best_rank": 17,
+        "avg_rank": 20.1,
+        "best_rank": 12,
         "worst_rank": 28,
-        "today_rank": 27,
-        "rank_change": -9,
+        "today_rank": 12,
+        "rank_change": 15,
         "trend": "stable",
-        "streak": 0,
+        "streak": 1,
         "icon": "[ACT]"
       },
       "original_rank": 8,
@@ -1650,13 +1650,13 @@
       "history": {
         "appearances": 7,
         "appearance_rate": 70.0,
-        "avg_rank": 23.6,
-        "best_rank": 14,
+        "avg_rank": 22.3,
+        "best_rank": 13,
         "worst_rank": 30,
-        "today_rank": 23,
-        "rank_change": 5,
-        "trend": "rising",
-        "streak": 3,
+        "today_rank": 13,
+        "rank_change": 10,
+        "trend": "stable",
+        "streak": 4,
         "icon": "[ACT]"
       },
       "original_rank": 9,
@@ -1673,9 +1673,9 @@
       "contracts_count": 1879,
       "put_contracts": 837,
       "call_contracts": 1042,
-      "total_oi": 5286954,
-      "put_oi": 2536184,
-      "call_oi": 2750770,
+      "total_oi": 5133363,
+      "put_oi": 2469662,
+      "call_oi": 2663701,
       "cp_oi_ratio": 1.08,
       "leap_cp_ratio": 0.84,
       "top_3_contracts_volume": [
@@ -1737,7 +1737,7 @@
           "strike": 130,
           "expiry": "2026-10-16",
           "type": "call",
-          "percentage": 1.8
+          "percentage": 1.9
         },
         {
           "ticker": "O:INTC261016C00160000",
@@ -1745,7 +1745,7 @@
           "strike": 160,
           "expiry": "2026-10-16",
           "type": "call",
-          "percentage": 1.3
+          "percentage": 1.4
         },
         {
           "ticker": "O:INTC261120C00070000",
@@ -1763,7 +1763,7 @@
           "strike": 40,
           "expiry": "2027-01-15",
           "type": "call",
-          "percentage": 0.9
+          "percentage": 1.0
         },
         {
           "ticker": "O:INTC270115P00015000",
@@ -1771,7 +1771,7 @@
           "strike": 15,
           "expiry": "2027-01-15",
           "type": "put",
-          "percentage": 0.8
+          "percentage": 0.9
         },
         {
           "ticker": "O:INTC270115P00020000",
@@ -1779,23 +1779,23 @@
           "strike": 20,
           "expiry": "2027-01-15",
           "type": "put",
-          "percentage": 0.8
+          "percentage": 0.9
         }
       ],
       "strike_concentration": {
         "range": "70-80",
-        "oi": 515865,
+        "oi": 502310,
         "percentage": 9.8,
         "dominant_strike": 70
       },
       "history": {
         "appearances": 10,
         "appearance_rate": 100.0,
-        "avg_rank": 10.9,
+        "avg_rank": 10.8,
         "best_rank": 7,
-        "worst_rank": 15,
-        "today_rank": 9,
-        "rank_change": 3,
+        "worst_rank": 14,
+        "today_rank": 14,
+        "rank_change": -5,
         "trend": "stable",
         "streak": 10,
         "icon": "[HOT]"
@@ -1814,8 +1814,8 @@
       "contracts_count": 1435,
       "put_contracts": 615,
       "call_contracts": 820,
-      "total_oi": 4813116,
-      "put_oi": 1946899,
+      "total_oi": 4812596,
+      "put_oi": 1946379,
       "call_oi": 2866217,
       "cp_oi_ratio": 1.47,
       "leap_cp_ratio": 1.35,
@@ -1925,18 +1925,18 @@
       ],
       "strike_concentration": {
         "range": "240-260",
-        "oi": 740115,
+        "oi": 739836,
         "percentage": 15.4,
         "dominant_strike": 250
       },
       "history": {
         "appearances": 10,
         "appearance_rate": 100.0,
-        "avg_rank": 12.7,
+        "avg_rank": 13.2,
         "best_rank": 10,
         "worst_rank": 16,
-        "today_rank": 13,
-        "rank_change": 0,
+        "today_rank": 15,
+        "rank_change": -2,
         "trend": "stable",
         "streak": 10,
         "icon": "[HOT]"
@@ -1955,10 +1955,10 @@
       "contracts_count": 2955,
       "put_contracts": 1845,
       "call_contracts": 1110,
-      "total_oi": 2115583,
+      "total_oi": 2105316,
       "put_oi": 1201219,
-      "call_oi": 914364,
-      "cp_oi_ratio": 0.76,
+      "call_oi": 904097,
+      "cp_oi_ratio": 0.75,
       "leap_cp_ratio": 0.62,
       "top_3_contracts_volume": [
         {
@@ -2040,21 +2040,21 @@
       ],
       "top_3_leap_oi": [],
       "strike_concentration": {
-        "range": "8000-8050",
-        "oi": 84846,
-        "percentage": 4.0,
-        "dominant_strike": 8000
+        "range": "7000-7050",
+        "oi": 75963,
+        "percentage": 3.6,
+        "dominant_strike": 7000
       },
       "history": {
         "appearances": 9,
         "appearance_rate": 90.0,
-        "avg_rank": 17.7,
+        "avg_rank": 17.9,
         "best_rank": 11,
         "worst_rank": 22,
-        "today_rank": 21,
-        "rank_change": 0,
+        "today_rank": 16,
+        "rank_change": 5,
         "trend": "falling",
-        "streak": 1,
+        "streak": 2,
         "icon": "[HOT]"
       },
       "original_rank": 4,
@@ -2071,10 +2071,10 @@
       "contracts_count": 1993,
       "put_contracts": 923,
       "call_contracts": 1070,
-      "total_oi": 3102180,
-      "put_oi": 1053764,
-      "call_oi": 2048416,
-      "cp_oi_ratio": 1.94,
+      "total_oi": 3010679,
+      "put_oi": 977928,
+      "call_oi": 2032751,
+      "cp_oi_ratio": 2.08,
       "leap_cp_ratio": 1.1,
       "top_3_contracts_volume": [
         {
@@ -2135,7 +2135,7 @@
           "strike": 575,
           "expiry": "2026-12-18",
           "type": "call",
-          "percentage": 4.3
+          "percentage": 4.4
         },
         {
           "ticker": "O:MSFT261218C00625000",
@@ -2143,7 +2143,7 @@
           "strike": 625,
           "expiry": "2026-12-18",
           "type": "call",
-          "percentage": 3.3
+          "percentage": 3.4
         },
         {
           "ticker": "O:MSFT261016C00550000",
@@ -2151,7 +2151,7 @@
           "strike": 550,
           "expiry": "2026-10-16",
           "type": "call",
-          "percentage": 2.0
+          "percentage": 2.1
         }
       ],
       "top_3_leap_oi": [
@@ -2183,19 +2183,19 @@
       "strike_concentration": {
         "range": "550-600",
         "oi": 492537,
-        "percentage": 15.9,
+        "percentage": 16.4,
         "dominant_strike": 575
       },
       "history": {
         "appearances": 8,
         "appearance_rate": 80.0,
-        "avg_rank": 18.9,
+        "avg_rank": 17.2,
         "best_rank": 9,
-        "worst_rank": 30,
-        "today_rank": 16,
-        "rank_change": -7,
+        "worst_rank": 25,
+        "today_rank": 17,
+        "rank_change": -1,
         "trend": "rising",
-        "streak": 6,
+        "streak": 7,
         "icon": "[ACT]"
       },
       "original_rank": 12,
@@ -2330,11 +2330,11 @@
       "history": {
         "appearances": 10,
         "appearance_rate": 100.0,
-        "avg_rank": 16.9,
+        "avg_rank": 17.5,
         "best_rank": 9,
         "worst_rank": 24,
-        "today_rank": 24,
-        "rank_change": -4,
+        "today_rank": 18,
+        "rank_change": 6,
         "trend": "falling",
         "streak": 10,
         "icon": "[HOT]"
@@ -2352,10 +2352,10 @@
       "contracts_count": 3014,
       "put_contracts": 1377,
       "call_contracts": 1637,
-      "total_oi": 742662,
+      "total_oi": 718135,
       "put_oi": 385870,
-      "call_oi": 356792,
-      "cp_oi_ratio": 0.92,
+      "call_oi": 332265,
+      "cp_oi_ratio": 0.86,
       "leap_cp_ratio": 1.99,
       "top_3_contracts_volume": [
         {
@@ -2416,7 +2416,7 @@
           "strike": 410,
           "expiry": "2026-10-02",
           "type": "put",
-          "percentage": 2.2
+          "percentage": 2.3
         },
         {
           "ticker": "O:AMD261016C00490000",
@@ -2432,13 +2432,13 @@
           "strike": 310,
           "expiry": "2026-10-09",
           "type": "put",
-          "percentage": 1.5
+          "percentage": 1.6
         }
       ],
       "top_3_leap_oi": [],
       "strike_concentration": {
         "range": "600-650",
-        "oi": 147083,
+        "oi": 141963,
         "percentage": 19.8,
         "dominant_strike": 600
       },
@@ -2448,8 +2448,8 @@
         "avg_rank": 16.1,
         "best_rank": 11,
         "worst_rank": 19,
-        "today_rank": 14,
-        "rank_change": 2,
+        "today_rank": 19,
+        "rank_change": -5,
         "trend": "stable",
         "streak": 10,
         "icon": "[HOT]"
@@ -2468,10 +2468,10 @@
       "contracts_count": 4581,
       "put_contracts": 2182,
       "call_contracts": 2399,
-      "total_oi": 631386,
+      "total_oi": 451473,
       "put_oi": 250911,
-      "call_oi": 380475,
-      "cp_oi_ratio": 1.52,
+      "call_oi": 200562,
+      "cp_oi_ratio": 0.8,
       "leap_cp_ratio": 1.15,
       "top_3_contracts_volume": [
         {
@@ -2532,15 +2532,7 @@
           "strike": 200,
           "expiry": "2026-10-02",
           "type": "put",
-          "percentage": 3.4
-        },
-        {
-          "ticker": "O:MU261016C01300000",
-          "oi": 21074,
-          "strike": 1300,
-          "expiry": "2026-10-16",
-          "type": "call",
-          "percentage": 3.3
+          "percentage": 4.8
         },
         {
           "ticker": "O:MU261002P00540000",
@@ -2548,24 +2540,32 @@
           "strike": 540,
           "expiry": "2026-10-02",
           "type": "put",
-          "percentage": 3.2
+          "percentage": 4.4
+        },
+        {
+          "ticker": "O:MU261002P00600000",
+          "oi": 19951,
+          "strike": 600,
+          "expiry": "2026-10-02",
+          "type": "put",
+          "percentage": 4.4
         }
       ],
       "top_3_leap_oi": [],
       "strike_concentration": {
-        "range": "1100-1150",
-        "oi": 44860,
-        "percentage": 7.1,
-        "dominant_strike": 1100
+        "range": "600-650",
+        "oi": 29387,
+        "percentage": 6.5,
+        "dominant_strike": 600
       },
       "history": {
         "appearances": 10,
         "appearance_rate": 100.0,
-        "avg_rank": 12.7,
+        "avg_rank": 13.1,
         "best_rank": 8,
-        "worst_rank": 16,
-        "today_rank": 11,
-        "rank_change": 0,
+        "worst_rank": 20,
+        "today_rank": 20,
+        "rank_change": -9,
         "trend": "stable",
         "streak": 10,
         "icon": "[HOT]"
@@ -2584,10 +2584,10 @@
       "contracts_count": 1615,
       "put_contracts": 726,
       "call_contracts": 889,
-      "total_oi": 1917350,
-      "put_oi": 944315,
-      "call_oi": 973035,
-      "cp_oi_ratio": 1.03,
+      "total_oi": 1878925,
+      "put_oi": 914954,
+      "call_oi": 963971,
+      "cp_oi_ratio": 1.05,
       "leap_cp_ratio": 0.76,
       "top_3_contracts_volume": [
         {
@@ -2690,25 +2690,25 @@
           "strike": 300,
           "expiry": "2027-01-15",
           "type": "put",
-          "percentage": 0.7
+          "percentage": 0.8
         }
       ],
       "strike_concentration": {
-        "range": "300-320",
-        "oi": 159160,
-        "percentage": 8.3,
-        "dominant_strike": 300
+        "range": "400-420",
+        "oi": 154294,
+        "percentage": 8.2,
+        "dominant_strike": 400
       },
       "history": {
         "appearances": 6,
         "appearance_rate": 60.0,
-        "avg_rank": 25.8,
-        "best_rank": 23,
+        "avg_rank": 25.3,
+        "best_rank": 21,
         "worst_rank": 29,
-        "today_rank": 29,
-        "rank_change": -4,
-        "trend": "falling",
-        "streak": 1,
+        "today_rank": 21,
+        "rank_change": 8,
+        "trend": "stable",
+        "streak": 2,
         "icon": "[ACT]"
       },
       "original_rank": 15,
@@ -2725,9 +2725,9 @@
       "contracts_count": 1855,
       "put_contracts": 762,
       "call_contracts": 1093,
-      "total_oi": 2379825,
-      "put_oi": 867836,
-      "call_oi": 1511989,
+      "total_oi": 2373669,
+      "put_oi": 867105,
+      "call_oi": 1506564,
       "cp_oi_ratio": 1.74,
       "leap_cp_ratio": 1.25,
       "top_3_contracts_volume": [
@@ -2837,19 +2837,19 @@
       "strike_concentration": {
         "range": "340-360",
         "oi": 338632,
-        "percentage": 14.2,
+        "percentage": 14.3,
         "dominant_strike": 350
       },
       "history": {
-        "appearances": 9,
-        "appearance_rate": 90.0,
-        "avg_rank": 18.3,
+        "appearances": 10,
+        "appearance_rate": 100.0,
+        "avg_rank": 18.7,
         "best_rank": 11,
         "worst_rank": 24,
-        "today_rank": 17,
-        "rank_change": 5,
-        "trend": "stable",
-        "streak": 9,
+        "today_rank": 22,
+        "rank_change": -5,
+        "trend": "falling",
+        "streak": 10,
         "icon": "[HOT]"
       },
       "original_rank": 16,
@@ -2866,9 +2866,9 @@
       "contracts_count": 2893,
       "put_contracts": 1219,
       "call_contracts": 1674,
-      "total_oi": 471237,
-      "put_oi": 182670,
-      "call_oi": 288567,
+      "total_oi": 470195,
+      "put_oi": 181897,
+      "call_oi": 288298,
       "cp_oi_ratio": 1.58,
       "leap_cp_ratio": 3.93,
       "top_3_contracts_volume": [
@@ -2959,12 +2959,12 @@
       "history": {
         "appearances": 10,
         "appearance_rate": 100.0,
-        "avg_rank": 23.3,
+        "avg_rank": 23.6,
         "best_rank": 8,
         "worst_rank": 30,
-        "today_rank": 19,
-        "rank_change": 11,
-        "trend": "falling",
+        "today_rank": 23,
+        "rank_change": -4,
+        "trend": "stable",
         "streak": 10,
         "icon": "[HOT]"
       },
@@ -3100,11 +3100,11 @@
       "history": {
         "appearances": 10,
         "appearance_rate": 100.0,
-        "avg_rank": 14.4,
-        "best_rank": 7,
-        "worst_rank": 19,
-        "today_rank": 18,
-        "rank_change": 0,
+        "avg_rank": 16.1,
+        "best_rank": 8,
+        "worst_rank": 24,
+        "today_rank": 24,
+        "rank_change": -6,
         "trend": "falling",
         "streak": 10,
         "icon": "[HOT]"
@@ -3241,13 +3241,13 @@
       "history": {
         "appearances": 4,
         "appearance_rate": 40.0,
-        "avg_rank": 24.0,
+        "avg_rank": 23.0,
         "best_rank": 13,
-        "worst_rank": 29,
-        "today_rank": 26,
-        "rank_change": -13,
+        "worst_rank": 28,
+        "today_rank": 25,
+        "rank_change": 1,
         "trend": "rising",
-        "streak": 1,
+        "streak": 2,
         "icon": "[OCC]"
       },
       "original_rank": 19,
@@ -3380,15 +3380,15 @@
         "dominant_strike": 40
       },
       "history": {
-        "appearances": 1,
-        "appearance_rate": 10.0,
-        "avg_rank": 23.0,
+        "appearances": 2,
+        "appearance_rate": 20.0,
+        "avg_rank": 24.5,
         "best_rank": 23,
-        "worst_rank": 23,
-        "today_rank": 23,
-        "rank_change": 0,
+        "worst_rank": 26,
+        "today_rank": 26,
+        "rank_change": -3,
         "trend": "stable",
-        "streak": 0,
+        "streak": 1,
         "icon": "[NEW]"
       },
       "original_rank": 20,
@@ -3521,15 +3521,15 @@
         "dominant_strike": 300
       },
       "history": {
-        "appearances": 0,
-        "appearance_rate": 0.0,
-        "avg_rank": null,
-        "best_rank": null,
-        "worst_rank": null,
-        "today_rank": null,
-        "rank_change": null,
-        "trend": "new",
-        "streak": 0,
+        "appearances": 1,
+        "appearance_rate": 10.0,
+        "avg_rank": 27.0,
+        "best_rank": 27,
+        "worst_rank": 27,
+        "today_rank": 27,
+        "rank_change": 0,
+        "trend": "stable",
+        "streak": 1,
         "icon": "[NEW]"
       },
       "original_rank": 21,
@@ -3662,15 +3662,15 @@
         "dominant_strike": 105
       },
       "history": {
-        "appearances": 1,
-        "appearance_rate": 10.0,
-        "avg_rank": 27.0,
+        "appearances": 2,
+        "appearance_rate": 20.0,
+        "avg_rank": 27.5,
         "best_rank": 27,
-        "worst_rank": 27,
-        "today_rank": 27,
-        "rank_change": 0,
+        "worst_rank": 28,
+        "today_rank": 28,
+        "rank_change": -1,
         "trend": "stable",
-        "streak": 0,
+        "streak": 1,
         "icon": "[NEW]"
       },
       "original_rank": 22,
@@ -3803,16 +3803,16 @@
         "dominant_strike": 70
       },
       "history": {
-        "appearances": 2,
-        "appearance_rate": 20.0,
-        "avg_rank": 23.5,
+        "appearances": 3,
+        "appearance_rate": 30.0,
+        "avg_rank": 25.3,
         "best_rank": 18,
         "worst_rank": 29,
         "today_rank": 29,
-        "rank_change": -11,
+        "rank_change": 0,
         "trend": "stable",
-        "streak": 0,
-        "icon": "[NEW]"
+        "streak": 1,
+        "icon": "[OCC]"
       },
       "original_rank": 23,
       "current_price": null
@@ -3946,13 +3946,13 @@
       "history": {
         "appearances": 9,
         "appearance_rate": 90.0,
-        "avg_rank": 22.2,
+        "avg_rank": 23.0,
         "best_rank": 8,
         "worst_rank": 30,
-        "today_rank": 15,
-        "rank_change": 8,
+        "today_rank": 30,
+        "rank_change": -15,
         "trend": "stable",
-        "streak": 0,
+        "streak": 1,
         "icon": "[HOT]"
       },
       "original_rank": 24,
@@ -4093,7 +4093,7 @@
         "today_rank": 25,
         "rank_change": -1,
         "trend": "stable",
-        "streak": 1,
+        "streak": 0,
         "icon": "[ACT]"
       },
       "original_rank": 25,
@@ -4110,10 +4110,10 @@
       "contracts_count": 1641,
       "put_contracts": 649,
       "call_contracts": 992,
-      "total_oi": 4502938,
-      "put_oi": 1286938,
-      "call_oi": 3216000,
-      "cp_oi_ratio": 2.5,
+      "total_oi": 4295320,
+      "put_oi": 1190718,
+      "call_oi": 3104602,
+      "cp_oi_ratio": 2.61,
       "leap_cp_ratio": 8.57,
       "top_3_contracts_volume": [
         {
@@ -4174,7 +4174,7 @@
           "strike": 70,
           "expiry": "2026-11-20",
           "type": "call",
-          "percentage": 2.1
+          "percentage": 2.2
         },
         {
           "ticker": "O:SLV261120C00080000",
@@ -4182,7 +4182,7 @@
           "strike": 80,
           "expiry": "2026-11-20",
           "type": "call",
-          "percentage": 2.1
+          "percentage": 2.2
         },
         {
           "ticker": "O:SLV270115C00100000",
@@ -4221,20 +4221,20 @@
       ],
       "strike_concentration": {
         "range": "60-70",
-        "oi": 1035307,
-        "percentage": 23.0,
+        "oi": 1004853,
+        "percentage": 23.4,
         "dominant_strike": 60
       },
       "history": {
-        "appearances": 8,
-        "appearance_rate": 80.0,
-        "avg_rank": 24.5,
+        "appearances": 7,
+        "appearance_rate": 70.0,
+        "avg_rank": 24.4,
         "best_rank": 20,
         "worst_rank": 29,
         "today_rank": 20,
         "rank_change": 9,
-        "trend": "stable",
-        "streak": 5,
+        "trend": "falling",
+        "streak": 0,
         "icon": "[ACT]"
       },
       "current_price": null
@@ -4349,7 +4349,7 @@
         "today_rank": 22,
         "rank_change": 4,
         "trend": "stable",
-        "streak": 2,
+        "streak": 0,
         "icon": "[OCC]"
       },
       "current_price": null
@@ -4711,7 +4711,7 @@
         "today_rank": 30,
         "rank_change": -1,
         "trend": "stable",
-        "streak": 1,
+        "streak": 0,
         "icon": "[OCC]"
       },
       "current_price": null
@@ -5121,7 +5121,7 @@
         "today_rank": 27,
         "rank_change": -5,
         "trend": "stable",
-        "streak": 1,
+        "streak": 0,
         "icon": "[OCC]"
       },
       "current_price": null
@@ -5441,9 +5441,9 @@
         }
       ],
       "history": {
-        "appearances": 7,
-        "appearance_rate": 70.0,
-        "avg_rank": 24.9,
+        "appearances": 6,
+        "appearance_rate": 60.0,
+        "avg_rank": 25.5,
         "best_rank": 21,
         "worst_rank": 29,
         "today_rank": 25,
@@ -5613,7 +5613,7 @@
         "today_rank": 28,
         "rank_change": 0,
         "trend": "stable",
-        "streak": 1,
+        "streak": 0,
         "icon": "[NEW]"
       },
       "current_price": null
@@ -6015,16 +6015,16 @@
         }
       ],
       "history": {
-        "appearances": 3,
-        "appearance_rate": 30.0,
-        "avg_rank": 22.0,
+        "appearances": 2,
+        "appearance_rate": 20.0,
+        "avg_rank": 20.0,
         "best_rank": 17,
-        "worst_rank": 26,
+        "worst_rank": 23,
         "today_rank": 17,
         "rank_change": 6,
         "trend": "stable",
         "streak": 0,
-        "icon": "[OCC]"
+        "icon": "[NEW]"
       },
       "current_price": null
     },
@@ -7491,16 +7491,16 @@
         }
       ],
       "history": {
-        "appearances": 3,
-        "appearance_rate": 30.0,
-        "avg_rank": 27.3,
+        "appearances": 2,
+        "appearance_rate": 20.0,
+        "avg_rank": 27.5,
         "best_rank": 25,
         "worst_rank": 30,
         "today_rank": 30,
         "rank_change": -5,
         "trend": "stable",
         "streak": 0,
-        "icon": "[OCC]"
+        "icon": "[NEW]"
       },
       "current_price": null
     },
@@ -9131,13 +9131,13 @@
         }
       ],
       "history": {
-        "appearances": 2,
-        "appearance_rate": 20.0,
-        "avg_rank": 24.0,
+        "appearances": 1,
+        "appearance_rate": 10.0,
+        "avg_rank": 20.0,
         "best_rank": 20,
-        "worst_rank": 28,
+        "worst_rank": 20,
         "today_rank": 20,
-        "rank_change": 8,
+        "rank_change": 0,
         "trend": "stable",
         "streak": 0,
         "icon": "[NEW]"
@@ -339510,7 +339510,7 @@
       "type": "LOW_TURNOVER",
       "severity": "LOW",
       "description": "Low turnover (Volume/OI: 0.06), strong position holding",
-      "value": 0.05662480806975357,
+      "value": 0.059361817047391116,
       "metric": "vol_oi_ratio"
     }
   ],
