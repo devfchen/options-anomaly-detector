@@ -163,7 +163,7 @@ class HTMLReportGenerator:
                 else:
                     macro_analysis = '<p>Macro analysis unavailable</p>'
             else:
-                macro_analysis = '<p>AI analysis not configured (OPENAI_API_KEY required)</p>'
+                macro_analysis = '<p>AI analysis not configured (GEMINI_API_KEY or OPENAI_API_KEY required)</p>'
         else:
             macro_analysis = '<p>Insufficient index data for macro analysis</p>'
 

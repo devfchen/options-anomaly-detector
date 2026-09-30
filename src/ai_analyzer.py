@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """
 AI Analyzer Module
-使用 OpenAI GPT 对期权市场数据进行智能分析和总结
+使用 Gemini（优先）或 OpenAI GPT 对期权市场数据进行智能分析和总结
 """
 import os
 import json
 from typing import Dict, List, Optional
+
+GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
+# 免费档没有 Pro 配额；最新 Flash 高峰期常 503，依次回退
+GEMINI_MODELS = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash"]
 
 
 class AIAnalyzer:
@@ -18,17 +22,43 @@ class AIAnalyzer:
         Args:
             api_key: OpenAI API key (optional, will use env var if not provided)
         """
-        self.api_key = api_key or os.getenv('OPENAI_API_KEY')
+        # 优先 Gemini（AI Studio 免费档，走 OpenAI 兼容接口）；没配才用 OpenAI
+        gemini_key = os.getenv('GEMINI_API_KEY')
+        if gemini_key and not api_key:
+            self.api_key = gemini_key
+            self.base_url = GEMINI_BASE_URL
+            self.models = GEMINI_MODELS
+        else:
+            self.api_key = api_key or os.getenv('OPENAI_API_KEY')
+            self.base_url = None
+            self.models = None  # 用各调用点自己的 OpenAI 模型
         self.client = None
 
         if self.api_key:
             try:
                 from openai import OpenAI
-                self.client = OpenAI(api_key=self.api_key)
+                self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
             except ImportError:
                 print("⚠️  OpenAI package not installed. Run: pip install openai")
             except Exception as e:
                 print(f"⚠️  Failed to initialize OpenAI client: {e}")
+
+    def _complete(self, openai_model: str, **kwargs):
+        """chat.completions.create；Gemini 按 GEMINI_MODELS 顺序回退（免费档常报 high demand / 配额满）"""
+        if not self.models:
+            return self.client.chat.completions.create(model=openai_model, **kwargs)
+        # Gemini 3.x 是思考模型，max_tokens 会被思考吃掉导致正文截断，去掉
+        kwargs.pop('max_tokens', None)
+        last_error = None
+        for model in self.models:
+            try:
+                response = self.client.chat.completions.create(model=model, **kwargs)
+                print(f"   🤖 AI model: {model}")
+                return response
+            except Exception as e:
+                print(f"   ⚠️  {model} failed: {str(e)[:120]}")
+                last_error = e
+        raise last_error
 
     def is_available(self) -> bool:
         """
@@ -99,8 +129,8 @@ class AIAnalyzer:
             prompt = self._build_analysis_prompt(market_summary)
 
             # 调用 GPT-5（2025年8月发布的最新最强模型）
-            response = self.client.chat.completions.create(
-                model="gpt-5",  # GPT-5 - OpenAI最新旗舰模型（2025年8月发布）
+            response = self._complete(
+                openai_model="gpt-5",
                 messages=[
                     {
                         "role": "system",
@@ -812,8 +842,8 @@ class AIAnalyzer:
             prompt = self._build_macro_prompt(indices_summary)
 
             # Call GPT-4o
-            response = self.client.chat.completions.create(
-                model="gpt-4o",
+            response = self._complete(
+                openai_model="gpt-4o",
                 messages=[
                     {
                         "role": "system",
