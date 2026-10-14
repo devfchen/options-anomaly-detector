@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>期权市场异常分析报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Courier New", Courier, monospace;
+            background: #f5f5f7;
+            padding: 40px 20px;
+            color: #1d1d1f;
+            line-height: 1.4;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: #fff;
+            padding: 40px;
+            border: 1px solid #d2d2d7;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1d1d1f;
+            letter-spacing: -0.5px;
+        }
+
+        .header .date {
+            color: #6e6e73;
+            font-size: 14px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1px;
+            margin-bottom: 20px;
+            background: #d2d2d7;
+            border: 1px solid #d2d2d7;
+        }
+
+        .stat-card {
+            background: #fff;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: 600;
+            margin: 8px 0;
+            color: #1d1d1f;
+        }
+
+        .stat-card .label {
+            color: #6e6e73;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card.high .number { color: #ef4444; }
+        .stat-card.medium .number { color: #f59e0b; }
+        .stat-card.low .number { color: #22c55e; }
+        .stat-card.total .number { color: #ef4444; }
+
+        /* C/P ratio color coding */
+        .cp-extreme-bear { color: #ef4444; font-weight: 700; }
+        .cp-bear { color: #f87171; }
+        .cp-slight-bear { color: #fb923c; }
+        .cp-neutral { color: #1d1d1f; }
+        .cp-bull { color: #4ade80; }
+        .cp-strong-bull { color: #22c55e; font-weight: 700; }
+        .cp-extreme-bull { color: #10b981; font-weight: 700; }
+
+        /* Contract type colors */
+        .contract-call { color: #22c55e; }
+        .contract-put { color: #ef4444; }
+
+        /* Row border for extreme C/P */
+        tr.row-extreme-bear td:first-child { border-left: 3px solid #ef4444; }
+        tr.row-extreme-bull td:first-child { border-left: 3px solid #22c55e; }
+
+        .nav {
+            background: #fff;
+            padding: 16px 24px;
+            border: 1px solid #d2d2d7;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .nav a {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 0 4px;
+            background: #000;
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .nav a:hover {
+            background: #333;
+        }
+
+        .section {
+            background: #fff;
+            padding: 32px;
+            border: 1px solid #d2d2d7;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            margin-bottom: 24px;
+            color: #1d1d1f;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 24px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            border: 1px solid #d2d2d7;
+        }
+
+        table th {
+            background: #f5f5f7;
+            color: #1d1d1f;
+            padding: 8px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 1px solid #d2d2d7;
+        }
+
+        table th.sortable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        table th.sortable:hover {
+            background: #e8e8ed;
+        }
+
+        table th.sortable.sorted-asc .sort-icon::after {
+            content: ' ^';
+        }
+
+        table th.sortable.sorted-desc .sort-icon::after {
+            content: ' v';
+        }
+
+        .sort-icon {
+            font-size: 12px;
+            opacity: 0.5;
+            margin-left: 4px;
+        }
+
+        table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #d2d2d7;
+            font-size: 14px;
+        }
+
+        table tr:hover {
+            background: #f5f5f7;
+        }
+
+
+        .compact-cell {
+            font-size: 12px;
+            line-height: 1.4;
+            padding: 6px 10px !important;
+        }
+
+        .compact-cell div {
+            margin: 2px 0;
+        }
+
+        .contract-item {
+            white-space: nowrap;
+        }
+
+        .oi-badge {
+            background: #f5f5f7;
+            padding: 2px 6px;
+            font-size: 11px;
+            color: #1d1d1f;
+            white-space: nowrap;
+        }
+
+        .pct {
+            color: #6e6e73;
+            font-size: 12px;
+        }
+
+        .compact-cell small {
+            color: #86868b;
+            font-size: 11px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            color: #fff;
+            background: #000;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .macro-content {
+            line-height: 1.8;
+            font-size: 14px;
+        }
+
+        .macro-content p {
+            margin: 16px 0;
+        }
+
+        .macro-content strong {
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .macro-content ul {
+            margin: 12px 0;
+            padding-left: 24px;
+        }
+
+        .macro-content li {
+            margin: 8px 0;
+        }
+
+        .footer {
+            text-align: center;
+            color: #6e6e73;
+            margin-top: 40px;
+            padding: 20px;
+            font-size: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .nav a {
+                display: block;
+                margin: 8px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Options Market Anomaly Analysis</h1>
+            <p class="date">🌅 <strong>美东时间:</strong> 2026-10-14 06:47:03 EDT | <strong>东八区时间:</strong> 2026-10-14 18:47:03 | <strong>交易时段:</strong> 盘前 (Pre-Market) | <strong>数据来源:</strong> CSV文件 (2026-10-13.csv.gz)</p>
+        </div>
+
+        <div class="nav">
+            <a href="index.html">Latest Report</a>
+            <a href="archive.html">Archive</a>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card total">
+                <div class="label">分析股票数</div>
+                <div class="number">4421</div>
+            </div>
+            <div class="stat-card total">
+                <div class="label">异常总数</div>
+                <div class="number">3331</div>
+            </div>
+            <div class="stat-card high">
+                <div class="label">高严重</div>
+                <div class="number">3310</div>
+            </div>
+            <div class="stat-card medium">
+                <div class="label">中严重</div>
+                <div class="number">11</div>
+            </div>
+            <div class="stat-card low">
+                <div class="label">低严重</div>
+                <div class="number">10</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Macro Market Outlook</h2>
+            <div class="macro-content">
+                <p>### Market Sentiment &amp; Positioning</p>
+
+<p>* <strong>Institutional Sentiment (C/P Ratios):</strong> 
+  The aggregate profile reveals <strong>heavy structural hedging alongside tactical constructive equity exposure</strong>. SPY’s Put/Call Open Interest (OI) ratio of 0.38 (P/C ratio of ~2.6:1 inverted) and SPX's Call/Put volume of 0.66 reflect consistent, programmatic institutional tail-risk buying. However, intraday volume ratios hovering near parity on SPY (0.91) and QQQ (0.97) indicate that day-to-day liquidity is not in panic mode; institutions are fully invested but structurally protected.</p>
+
+<p>* <strong>Smart Money Footprint (October 2026 LEAPS Dominance):</strong>
+  The most glaring anomaly is the massive concentration in the <strong>October 16, 2026 expiration</strong> across all four indices. 
+  * <strong>SPX &amp; QQQ (Upside Participation + Collars):</strong> Top strikes include SPX 7000/8000 calls and QQQ 760 calls alongside SPX 7000 puts. This footprint is typical of large institutional collars, risk reversals, or structured product hedging (such as bank issuance of autocallable notes). Smart money is positioning for continuous nominal asset inflation toward the mid-to-late 2020s, but capping upside to finance downside protection.
+  * <strong>IWM (Defensive Skew):</strong> IWM OI is tightly concentrated around 270–275 puts. Institutions are treating small caps as the key vulnerability, hedging credit and balance sheet risk.</p>
+
+<p>* <strong>Hedging vs. Directional Bets:</strong>
+  Rather than an impending crash signal, the extreme put OI on SPY ($525, $425, $625 strikes) indicates <strong>systematic portfolio insurance</strong>. Institutional asset allocators are running elevated equity beta—driven by momentum and AI capital expenditure—while purchasing multi-year out-of-the-money (OTM) puts to lock in benchmark returns against macro shocks.</p>
+
+<p>---</p>
+
+<p>### Macro Outlook</p>
+
+<p>* <strong>Current Macro Regime:</strong>
+  * <strong>Fed &amp; Monetary Policy:</strong> Markets are navigating the transition from restrictive policy to a neutral recalibration. The pricing of higher future index levels (SPX 7000–8000) implies expectations of ongoing balance-sheet expansion, nominal growth, and eventually lower real rates.
+  * <strong>Fiscal Dominance &amp; Inflation:</strong> The long-dated call targets on QQQ and SPX reflect expectations that persistent US fiscal deficits will continue to buoy nominal asset prices, keeping earnings resilient despite sticky baseline inflation.
+  * <strong>Corporate Bifurcation:</strong> The heavy put concentration on IWM highlights the "maturity wall." High-for-longer policy rates pose refinancing risks for floating-rate and lower-tier corporate borrowers, keeping institutional appetite skewed toward mega-cap quality.</p>
+
+<p>* <strong>Near-Term Risks &amp; Opportunities:</strong>
+  * <strong>Risks:</strong> 
+    1. *Refinancing shock:* A sharp widening in credit spreads dragging down small caps (IWM).
+    2. *Volatility Spike from De-hedging/Re-hedging:* Dealer short-gamma positioning around the highly concentrated SPX 7000 and SPY 525 levels can amplify drawdowns if these strikes are breached.
+  * <strong>Opportunities:</strong> 
+    1. *Tech &amp; Secular Growth:* Mega-cap balance sheets remain immune to debt maturity pressures, supporting QQQ call flows.
+    2. *Volatility Monetization:* With long-dated puts heavily bid, options implied volatility skew remains elevated, offering attractive entry points for covered-call and collar financing strategies.</p>
+
+<p>* <strong>What to Watch:</strong>
+  * <strong>US 10-Year Real Yields:</strong> A sustained breakout above 2.20% would pressure equity valuations, particularly high-multiple tech.
+  * <strong>High-Yield Credit Spreads (OAS):</strong> Any widening beyond 400 bps would validate the defensive positioning observed in IWM options.
+  * <strong>Dealer Gamma Profile:</strong> Expirations and roll periods of large SPX/SPY LEAPS blocks, which could trigger dealer rehedging flows and expand realized volatility.</p>
+
+<p>---</p>
+
+<p>### Key Takeaways</p>
+
+<p>* <strong>Structural Protection, Not Outright Bearishness:</strong> The deeply skewed Put/Call OI ratios (SPY at 0.38 C/P) reflect institutional compliance with risk mandates—investors are staying long equity beta while running multi-year catastrophe hedges.
+* <strong>Oct 2026 Structured Product Footprint:</strong> Massive, synchronized open interest in late-2026 contracts across all indices points to bank-dealer hedging of long-term structured notes and institutional index collars (e.g., SPX 7000–8000 corridor).
+* <strong>Clear Small-Cap Vulnerability:</strong> IWM options show defensive clustering around 270–275 puts, signaling institutional anxiety regarding the corporate refinancing cycle and higher-for-longer cost of capital.
+* <strong>Nominal Asset Inflation Expected:</strong> The presence of deep OTM long-dated calls on tech and large-cap benchmarks confirms that institutions anticipate persistent fiscal tailwinds and nominal earnings expansion over the medium horizon.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Market Indices (4)</h2>
+            <table id="indexTable">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th class="sortable" data-table="index" data-column="ticker" data-type="string">Ticker <span class="sort-icon"></span></th>
+                        <th class="sortable" data-table="index" data-column="cp_volume_ratio" data-type="number">C/P Volume <span class="sort-icon"></span></th>
+                    </tr>
+                </thead>
+                <tbody id="indexTableBody">
+                    
+                    <tr>
+                        <td>1</td>
+                        <td><strong>SPY</strong></td>
+                        <td><span class="cp-slight-bear">0.91</span></td>
+                    </tr>
+                
+                    <tr>
+                        <td>2</td>
+                        <td><strong>QQQ</strong></td>
+                        <td><span class="cp-slight-bear">0.97</span></td>
+                    </tr>
+                
+                    <tr>
+                        <td>3</td>
+                        <td><strong>IWM</strong></td>
+                        <td><span class="cp-slight-bear">0.97</span></td>
+                    </tr>
+                
+                    <tr>
+                        <td>4</td>
+                        <td><strong>SPX</strong></td>
+                        <td><span class="cp-bear">0.66</span></td>
+                    </tr>
+                
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Stocks & ETFs - Top 25 (2026-10-13 Post-Market Options Analysis)</h2>
+            <table id="stockTable">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th class="sortable" data-table="stock" data-column="ticker" data-type="string">Ticker <span class="sort-icon"></span></th>
+                        <th class="sortable" data-table="stock" data-column="cp_volume_ratio" data-type="number">C/P Volume <span class="sort-icon"></span></th>
+                        <th class="sortable" data-table="stock" data-column="leap_cp_ratio" data-type="number">LEAP C/P <span class="sort-icon"></span></th>
+                        <th class="sortable" data-table="stock" data-column="cp_oi_ratio" data-type="number">C/P OI <span class="sort-icon"></span></th>
+                        <th>Top Volume</th>
+                        <th>Top Leap</th>
+                        <th>Top OI</th>
+                    </tr>
+                </thead>
+                <tbody id="stockTableBody">
+                    
+                    <tr>
+                        <td>1</td>
+                        <td><strong>NVDA</strong></td>
+                        <td><span class="cp-neutral">1.24</span></td>
+                        <td><span class="cp-bear">0.64</span></td>
+                        <td><span class="cp-neutral">1.02</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261014C227</span> <span class='oi-badge'>93K (5.3%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270115P220</span> <span class='oi-badge'>26K (1.5%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270115P100</span> <span class='oi-badge'>456K (4.3%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>2</td>
+                        <td><strong>AAPL</strong></td>
+                        <td><span class="cp-bull">1.86</span></td>
+                        <td><span class="cp-neutral">1.16</span></td>
+                        <td><span class="cp-neutral">1.33</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261014C350</span> <span class='oi-badge'>105K (8.7%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270115P340</span> <span class='oi-badge'>11K (0.9%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261016C340</span> <span class='oi-badge'>123K (2.8%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>3</td>
+                        <td><strong>SPCX</strong></td>
+                        <td><span class="cp-bull">1.85</span></td>
+                        <td><span class="cp-bull">1.52</span></td>
+                        <td><span class="cp-slight-bear">0.97</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261014C160</span> <span class='oi-badge'>54K (5.5%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>280616P160</span> <span class='oi-badge'>7K (0.7%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>261016P100</span> <span class='oi-badge'>48K (1.2%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>4</td>
+                        <td><strong>MU</strong></td>
+                        <td><span class="cp-bull">1.65</span></td>
+                        <td><span class="cp-neutral">1.06</span></td>
+                        <td><span class="cp-neutral">1.04</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261014C1000</span> <span class='oi-badge'>36K (3.7%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270115P360</span> <span class='oi-badge'>2K (0.2%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261016C1100</span> <span class='oi-badge'>17K (2.0%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>5</td>
+                        <td><strong>TSLA</strong></td>
+                        <td><span class="cp-neutral">1.36</span></td>
+                        <td><span class="cp-neutral">1.45</span></td>
+                        <td><span class="cp-bull">1.52</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261014C375</span> <span class='oi-badge'>55K (5.9%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270416C430</span> <span class='oi-badge'>5K (0.5%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270115C960</span> <span class='oi-badge'>112K (3.4%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>6</td>
+                        <td><strong>META</strong></td>
+                        <td><span class="cp-neutral">1.35</span></td>
+                        <td><span class="cp-bull">1.65</span></td>
+                        <td><span class="cp-neutral">1.46</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261014C770</span> <span class='oi-badge'>37K (4.1%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270219C1080</span> <span class='oi-badge'>4K (0.4%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261016C800</span> <span class='oi-badge'>23K (2.7%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>7</td>
+                        <td><strong>INTC</strong></td>
+                        <td><span class="cp-bull">1.93</span></td>
+                        <td><span class="cp-slight-bear">0.88</span></td>
+                        <td><span class="cp-neutral">1.11</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261120C130</span> <span class='oi-badge'>41K (4.9%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270617P80</span> <span class='oi-badge'>8K (0.9%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261120C130</span> <span class='oi-badge'>95K (1.4%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>8</td>
+                        <td><strong>TLT</strong></td>
+                        <td><span class="cp-neutral">1.39</span></td>
+                        <td><span class="cp-bull">1.58</span></td>
+                        <td><span class="cp-bull">1.90</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>261120P73</span> <span class='oi-badge'>31K (4.4%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270115P77</span> <span class='oi-badge'>22K (3.1%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261218C90</span> <span class='oi-badge'>342K (3.0%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>9</td>
+                        <td><strong>HYG</strong></td>
+                        <td><span class="cp-bear">0.71</span></td>
+                        <td><span class="cp-strong-bull">3.71</span></td>
+                        <td><span class="cp-extreme-bear">0.36</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270115C79</span> <span class='oi-badge'>97K (18.2%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270115C79</span> <span class='oi-badge'>97K (18.2%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>261218P75</span> <span class='oi-badge'>772K (7.3%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>10</td>
+                        <td><strong>AMZN</strong></td>
+                        <td><span class="cp-strong-bull">2.43</span></td>
+                        <td><span class="cp-bull">1.81</span></td>
+                        <td><span class="cp-neutral">1.44</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261014C262</span> <span class='oi-badge'>39K (7.4%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270115C300</span> <span class='oi-badge'>5K (0.9%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270115C300</span> <span class='oi-badge'>69K (1.4%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>11</td>
+                        <td><strong>AMD</strong></td>
+                        <td><span class="cp-neutral">1.46</span></td>
+                        <td><span class="cp-neutral">1.07</span></td>
+                        <td><span class="cp-slight-bear">0.94</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261014C600</span> <span class='oi-badge'>18K (3.6%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270115P400</span> <span class='oi-badge'>3K (0.6%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>261016P400</span> <span class='oi-badge'>9K (1.3%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>12</td>
+                        <td><strong>MSFT</strong></td>
+                        <td><span class="cp-bull">1.68</span></td>
+                        <td><span class="cp-neutral">1.34</span></td>
+                        <td><span class="cp-bull">1.76</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261014C550</span> <span class='oi-badge'>23K (4.9%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270115P450</span> <span class='oi-badge'>3K (0.6%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261218C575</span> <span class='oi-badge'>133K (4.0%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>13</td>
+                        <td><strong>CIFR</strong></td>
+                        <td><span class="cp-strong-bull">4.07</span></td>
+                        <td><span class="cp-strong-bull">5.48</span></td>
+                        <td><span class="cp-strong-bull">3.03</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270115C11</span> <span class='oi-badge'>26K (5.7%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270115C11</span> <span class='oi-badge'>26K (5.7%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270115C20</span> <span class='oi-badge'>69K (3.7%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>14</td>
+                        <td><strong>EWZ</strong></td>
+                        <td><span class="cp-neutral">1.30</span></td>
+                        <td><span class="cp-extreme-bull">11.04</span></td>
+                        <td><span class="cp-strong-bull">2.72</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>261023P41</span> <span class='oi-badge'>52K (12.3%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270319C54</span> <span class='oi-badge'>8K (1.9%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261120C43</span> <span class='oi-badge'>825K (7.2%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>15</td>
+                        <td><strong>GOOGL</strong></td>
+                        <td><span class="cp-strong-bull">3.22</span></td>
+                        <td><span class="cp-strong-bull">2.48</span></td>
+                        <td><span class="cp-bull">1.68</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261014C360</span> <span class='oi-badge'>25K (6.0%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270115C400</span> <span class='oi-badge'>3K (0.7%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261016C375</span> <span class='oi-badge'>67K (2.8%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>16</td>
+                        <td><strong>DRAM</strong></td>
+                        <td><span class="cp-bull">1.76</span></td>
+                        <td><span class="cp-strong-bull">2.08</span></td>
+                        <td><span class="cp-bull">1.79</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261120C55</span> <span class='oi-badge'>27K (7.1%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270115P43</span> <span class='oi-badge'>12K (3.2%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261016C122</span> <span class='oi-badge'>51K (2.0%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>17</td>
+                        <td><strong>SOFI</strong></td>
+                        <td><span class="cp-strong-bull">4.33</span></td>
+                        <td><span class="cp-strong-bull">2.90</span></td>
+                        <td><span class="cp-bull">1.88</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261120C27</span> <span class='oi-badge'>32K (8.7%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270115C25</span> <span class='oi-badge'>3K (0.9%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270115C20</span> <span class='oi-badge'>110K (2.7%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>18</td>
+                        <td><strong>CRWV</strong></td>
+                        <td><span class="cp-slight-bear">0.91</span></td>
+                        <td><span class="cp-bear">0.73</span></td>
+                        <td><span class="cp-neutral">1.06</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261016C80</span> <span class='oi-badge'>20K (5.5%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270319P47</span> <span class='oi-badge'>10K (2.8%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>281215P35</span> <span class='oi-badge'>71K (2.4%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>19</td>
+                        <td><strong>IBIT</strong></td>
+                        <td><span class="cp-slight-bear">0.91</span></td>
+                        <td><span class="cp-extreme-bear">0.35</span></td>
+                        <td><span class="cp-neutral">1.41</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>261013P47</span> <span class='oi-badge'>11K (3.3%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270115P40</span> <span class='oi-badge'>11K (3.3%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261016C50</span> <span class='oi-badge'>76K (1.1%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>20</td>
+                        <td><strong>IREN</strong></td>
+                        <td><span class="cp-bull">1.89</span></td>
+                        <td><span class="cp-neutral">1.32</span></td>
+                        <td><span class="cp-neutral">1.25</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261016C35</span> <span class='oi-badge'>21K (6.3%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>290119P10</span> <span class='oi-badge'>11K (3.3%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270115P30</span> <span class='oi-badge'>76K (2.4%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>21</td>
+                        <td><strong>XLF</strong></td>
+                        <td><span class="cp-slight-bear">0.98</span></td>
+                        <td><span class="cp-extreme-bear">0.23</span></td>
+                        <td><span class="cp-bear">0.71</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270319P54</span> <span class='oi-badge'>44K (13.7%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270319P54</span> <span class='oi-badge'>44K (13.7%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>261120P54</span> <span class='oi-badge'>184K (3.0%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>22</td>
+                        <td><strong>PLTR</strong></td>
+                        <td><span class="cp-neutral">1.18</span></td>
+                        <td><span class="cp-slight-bear">0.80</span></td>
+                        <td><span class="cp-slight-bear">0.89</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261016C210</span> <span class='oi-badge'>25K (7.8%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270319P100</span> <span class='oi-badge'>3K (0.8%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>261218P140</span> <span class='oi-badge'>94K (2.6%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>23</td>
+                        <td><strong>WMT</strong></td>
+                        <td><span class="cp-strong-bull">6.89</span></td>
+                        <td><span class="cp-bull">1.69</span></td>
+                        <td><span class="cp-bull">1.75</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261120C115</span> <span class='oi-badge'>110K (34.8%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270115C125</span> <span class='oi-badge'>2K (0.8%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261120C120</span> <span class='oi-badge'>119K (8.7%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>24</td>
+                        <td><strong>WULF</strong></td>
+                        <td><span class="cp-strong-bull">5.21</span></td>
+                        <td><span class="cp-extreme-bull">24.61</span></td>
+                        <td><span class="cp-strong-bull">2.60</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270115C13</span> <span class='oi-badge'>27K (8.7%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>270115C13</span> <span class='oi-badge'>27K (8.7%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>261016P9</span> <span class='oi-badge'>121K (3.9%)</span></div></td>
+                    </tr>
+                
+                    <tr>
+                        <td>25</td>
+                        <td><strong>ORCL</strong></td>
+                        <td><span class="cp-bull">1.78</span></td>
+                        <td><span class="cp-neutral">1.20</span></td>
+                        <td><span class="cp-neutral">1.21</span></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261016C150</span> <span class='oi-badge'>18K (5.9%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-put'>270219P110</span> <span class='oi-badge'>4K (1.5%)</span></div></td>
+                        <td class="compact-cell"><div class='contract-item'><span class='contract-call'>261016C160</span> <span class='oi-badge'>47K (1.3%)</span></div></td>
+                    </tr>
+                
+                </tbody>
+            </table>
+
+            <div style="margin-top: 20px; padding: 15px; background-color: #f5f5f7; border-radius: 8px; font-size: 14px;">
+                <h3 style="margin-top: 0; font-size: 15px; color: #1d1d1f;">📊 Top 列说明</h3>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                    <div>
+                        <strong style="color: #06c;">Top Volume</strong>
+                        <p style="margin: 5px 0 0 0; color: #86868b;">成交量最大的期权合约（基于当日成交量）</p>
+                    </div>
+                    <div>
+                        <strong style="color: #06c;">Top Leap</strong>
+                        <p style="margin: 5px 0 0 0; color: #86868b;">距到期日≥90天且成交量最大的期权合约</p>
+                    </div>
+                    <div>
+                        <strong style="color: #06c;">Top OI</strong>
+                        <p style="margin: 5px 0 0 0; color: #86868b;">持仓量（Open Interest）最大的期权合约</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Call/Put Ratio Analysis (2026-10-13 Post-Market Options Analysis)</h2>
+            <div class="chart-container">
+                <canvas id="cpRatioChart"></canvas>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Volume Analysis (2026-10-13 Post-Market Options Analysis)</h2>
+            <div class="chart-container">
+                <canvas id="volumeOIChart"></canvas>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Options Anomaly Detection System | Data: Polygon.io</p>
+            <p>For reference only. Not investment advice.</p>
+        </div>
+    </div>
+
+    <script>
+        // Store table data for sorting
+        const indexData = [{"ticker": "SPY", "total_volume": 10696164, "put_volume": 5608819, "call_volume": 5087345, "cp_volume_ratio": 0.91, "total_transactions": 1247550, "avg_trade_size": 8.6, "contracts_count": 5002, "put_contracts": 2739, "call_contracts": 2263, "total_oi": 4584915, "put_oi": 3333181, "call_oi": 1251734, "cp_oi_ratio": 0.38, "leap_cp_ratio": 0.76, "top_3_contracts_volume": [{"ticker": "261013C778", "volume": 1206944, "strike": 778.0, "expiry": "261013", "type": "call", "percentage": 11.3}, {"ticker": "261013P777", "volume": 1096788, "strike": 777.0, "expiry": "261013", "type": "put", "percentage": 10.3}, {"ticker": "261013C779", "volume": 864679, "strike": 779.0, "expiry": "261013", "type": "call", "percentage": 8.1}], "top_3_leap_volume": [{"ticker": "270917P430", "volume": 8753, "strike": 430.0, "expiry": "270917", "type": "put", "percentage": 0.1}, {"ticker": "270115C900", "volume": 7882, "strike": 900.0, "expiry": "270115", "type": "call", "percentage": 0.1}, {"ticker": "270115C860", "volume": 3134, "strike": 860.0, "expiry": "270115", "type": "call", "percentage": 0.0}], "top_3_oi": [{"ticker": "O:SPY261016P00525000", "oi": 302248, "strike": 525, "expiry": "2026-10-16", "type": "put", "percentage": 6.6}, {"ticker": "O:SPY261016P00625000", "oi": 156196, "strike": 625, "expiry": "2026-10-16", "type": "put", "percentage": 3.4}, {"ticker": "O:SPY261016P00425000", "oi": 154945, "strike": 425, "expiry": "2026-10-16", "type": "put", "percentage": 3.4}], "top_3_leap_oi": [], "strike_concentration": {"range": "500-550", "oi": 348402, "percentage": 7.6, "dominant_strike": 525}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 1.0, "best_rank": 1, "worst_rank": 1, "today_rank": 1, "rank_change": 0, "trend": "stable", "streak": 10, "icon": "[HOT]"}, "original_rank": 1, "current_price": null}, {"ticker": "QQQ", "total_volume": 7758645, "put_volume": 3943741, "call_volume": 3814904, "cp_volume_ratio": 0.97, "total_transactions": 1090348, "avg_trade_size": 7.1, "contracts_count": 5169, "put_contracts": 2748, "call_contracts": 2421, "total_oi": 2758837, "put_oi": 1761039, "call_oi": 997798, "cp_oi_ratio": 0.57, "leap_cp_ratio": 0.66, "top_3_contracts_volume": [{"ticker": "261013C743", "volume": 657495, "strike": 743.0, "expiry": "261013", "type": "call", "percentage": 8.5}, {"ticker": "261013P742", "volume": 606831, "strike": 742.0, "expiry": "261013", "type": "put", "percentage": 7.8}, {"ticker": "261013C742", "volume": 520231, "strike": 742.0, "expiry": "261013", "type": "call", "percentage": 6.7}], "top_3_leap_volume": [{"ticker": "270617P750", "volume": 14010, "strike": 750.0, "expiry": "270617", "type": "put", "percentage": 0.2}, {"ticker": "270115P710", "volume": 12751, "strike": 710.0, "expiry": "270115", "type": "put", "percentage": 0.2}, {"ticker": "270115P680", "volume": 10693, "strike": 680.0, "expiry": "270115", "type": "put", "percentage": 0.1}], "top_3_oi": [{"ticker": "O:QQQ261016C00760000", "oi": 66474, "strike": 760, "expiry": "2026-10-16", "type": "call", "percentage": 2.4}, {"ticker": "O:QQQ261016P00700000", "oi": 61348, "strike": 700, "expiry": "2026-10-16", "type": "put", "percentage": 2.2}, {"ticker": "O:QQQ261016P00670000", "oi": 49119, "strike": 670, "expiry": "2026-10-16", "type": "put", "percentage": 1.8}], "top_3_leap_oi": [], "strike_concentration": {"range": "750-800", "oi": 580635, "percentage": 21.0, "dominant_strike": 760}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 2.0, "best_rank": 2, "worst_rank": 2, "today_rank": 2, "rank_change": 0, "trend": "stable", "streak": 10, "icon": "[HOT]"}, "original_rank": 2, "current_price": null}, {"ticker": "IWM", "total_volume": 1769282, "put_volume": 897011, "call_volume": 872271, "cp_volume_ratio": 0.97, "total_transactions": 176341, "avg_trade_size": 10.0, "contracts_count": 1774, "put_contracts": 893, "call_contracts": 881, "total_oi": 2937314, "put_oi": 1836739, "call_oi": 1100575, "cp_oi_ratio": 0.6, "leap_cp_ratio": 0.68, "top_3_contracts_volume": [{"ticker": "261013C277", "volume": 185013, "strike": 277.0, "expiry": "261013", "type": "call", "percentage": 10.5}, {"ticker": "261013P276", "volume": 160135, "strike": 276.0, "expiry": "261013", "type": "put", "percentage": 9.1}, {"ticker": "261013P277", "volume": 90166, "strike": 277.0, "expiry": "261013", "type": "put", "percentage": 5.1}], "top_3_leap_volume": [{"ticker": "270115P105", "volume": 10000, "strike": 105.0, "expiry": "270115", "type": "put", "percentage": 0.6}, {"ticker": "270115C335", "volume": 5024, "strike": 335.0, "expiry": "270115", "type": "call", "percentage": 0.3}, {"ticker": "270617C275", "volume": 3501, "strike": 275.0, "expiry": "270617", "type": "call", "percentage": 0.2}], "top_3_oi": [{"ticker": "O:IWM261016P00275000", "oi": 85204, "strike": 275, "expiry": "2026-10-16", "type": "put", "percentage": 2.9}, {"ticker": "O:IWM261016P00270000", "oi": 68781, "strike": 270, "expiry": "2026-10-16", "type": "put", "percentage": 2.3}, {"ticker": "O:IWM261016P00272000", "oi": 66009, "strike": 272, "expiry": "2026-10-16", "type": "put", "percentage": 2.2}], "top_3_leap_oi": [], "strike_concentration": {"range": "280-300", "oi": 946570, "percentage": 32.2, "dominant_strike": 285}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 6.0, "best_rank": 4, "worst_rank": 9, "today_rank": 9, "rank_change": -2, "trend": "stable", "streak": 10, "icon": "[HOT]"}, "original_rank": 3, "current_price": null}, {"ticker": "SPX", "total_volume": 526955, "put_volume": 316491, "call_volume": 210464, "cp_volume_ratio": 0.66, "total_transactions": 27137, "avg_trade_size": 19.4, "contracts_count": 2417, "put_contracts": 1484, "call_contracts": 933, "total_oi": 3205772, "put_oi": 1889725, "call_oi": 1316047, "cp_oi_ratio": 0.7, "leap_cp_ratio": 0.67, "top_3_contracts_volume": [{"ticker": "261218C8000", "volume": 19241, "strike": 8000.0, "expiry": "261218", "type": "call", "percentage": 3.7}, {"ticker": "261016C8000", "volume": 14605, "strike": 8000.0, "expiry": "261016", "type": "call", "percentage": 2.8}, {"ticker": "261218P7000", "volume": 14463, "strike": 7000.0, "expiry": "261218", "type": "put", "percentage": 2.7}], "top_3_leap_volume": [{"ticker": "270115P7150", "volume": 4572, "strike": 7150.0, "expiry": "270115", "type": "put", "percentage": 0.9}, {"ticker": "270319C8000", "volume": 4521, "strike": 8000.0, "expiry": "270319", "type": "call", "percentage": 0.9}, {"ticker": "270319P7000", "volume": 4164, "strike": 7000.0, "expiry": "270319", "type": "put", "percentage": 0.8}], "top_3_oi": [{"ticker": "O:SPX261016P07000000", "oi": 205751, "strike": 7000, "expiry": "2026-10-16", "type": "put", "percentage": 6.4}, {"ticker": "O:SPX261016C08000000", "oi": 195256, "strike": 8000, "expiry": "2026-10-16", "type": "call", "percentage": 6.1}, {"ticker": "O:SPX261016C07000000", "oi": 185500, "strike": 7000, "expiry": "2026-10-16", "type": "call", "percentage": 5.8}], "top_3_leap_oi": [], "strike_concentration": {"range": "7000-7050", "oi": 399515, "percentage": 12.5, "dominant_strike": 7000}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 20.3, "best_rank": 15, "worst_rank": 24, "today_rank": 20, "rank_change": 4, "trend": "falling", "streak": 10, "icon": "[HOT]"}, "original_rank": 4, "current_price": null}];
+        const stockData = [{"ticker": "NVDA", "total_volume": 1762281, "put_volume": 785701, "call_volume": 976580, "cp_volume_ratio": 1.24, "total_transactions": 278497, "avg_trade_size": 6.3, "contracts_count": 2179, "put_contracts": 1002, "call_contracts": 1177, "total_oi": 10564440, "put_oi": 5219800, "call_oi": 5344640, "cp_oi_ratio": 1.02, "leap_cp_ratio": 0.64, "top_3_contracts_volume": [{"ticker": "261014C227", "volume": 92685, "strike": 227.5, "expiry": "261014", "type": "call", "percentage": 5.3}, {"ticker": "261014P225", "volume": 79704, "strike": 225.0, "expiry": "261014", "type": "put", "percentage": 4.5}, {"ticker": "261014C230", "volume": 77525, "strike": 230.0, "expiry": "261014", "type": "call", "percentage": 4.4}], "top_3_leap_volume": [{"ticker": "270115P220", "volume": 25615, "strike": 220.0, "expiry": "270115", "type": "put", "percentage": 1.5}, {"ticker": "270115P170", "volume": 25476, "strike": 170.0, "expiry": "270115", "type": "put", "percentage": 1.4}, {"ticker": "280915P245", "volume": 5614, "strike": 245.0, "expiry": "280915", "type": "put", "percentage": 0.3}], "top_3_oi": [{"ticker": "O:NVDA270115P00100000", "oi": 455706, "strike": 100, "expiry": "2027-01-15", "type": "put", "percentage": 4.3}, {"ticker": "O:NVDA270115P00150000", "oi": 316580, "strike": 150, "expiry": "2027-01-15", "type": "put", "percentage": 3.0}, {"ticker": "O:NVDA270115C00200000", "oi": 290915, "strike": 200, "expiry": "2027-01-15", "type": "call", "percentage": 2.8}], "top_3_leap_oi": [{"ticker": "O:NVDA270115P00100000", "oi": 455706, "strike": 100, "expiry": "2027-01-15", "type": "put", "percentage": 4.3}, {"ticker": "O:NVDA270115P00150000", "oi": 316580, "strike": 150, "expiry": "2027-01-15", "type": "put", "percentage": 3.0}, {"ticker": "O:NVDA270115C00200000", "oi": 290915, "strike": 200, "expiry": "2027-01-15", "type": "call", "percentage": 2.8}], "strike_concentration": {"range": "200-220", "oi": 1430979, "percentage": 13.5, "dominant_strike": 200}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 4.3, "best_rank": 4, "worst_rank": 5, "today_rank": 4, "rank_change": 1, "trend": "stable", "streak": 10, "icon": "[HOT]"}, "original_rank": 1, "current_price": null}, {"ticker": "AAPL", "total_volume": 1202012, "put_volume": 420233, "call_volume": 781779, "cp_volume_ratio": 1.86, "total_transactions": 239778, "avg_trade_size": 5.0, "contracts_count": 1728, "put_contracts": 768, "call_contracts": 960, "total_oi": 4414749, "put_oi": 1898268, "call_oi": 2516481, "cp_oi_ratio": 1.33, "leap_cp_ratio": 1.16, "top_3_contracts_volume": [{"ticker": "261014C350", "volume": 104852, "strike": 350.0, "expiry": "261014", "type": "call", "percentage": 8.7}, {"ticker": "261014C347", "volume": 88355, "strike": 347.5, "expiry": "261014", "type": "call", "percentage": 7.4}, {"ticker": "261014C345", "volume": 79151, "strike": 345.0, "expiry": "261014", "type": "call", "percentage": 6.6}], "top_3_leap_volume": [{"ticker": "270115P340", "volume": 10759, "strike": 340.0, "expiry": "270115", "type": "put", "percentage": 0.9}, {"ticker": "280121C460", "volume": 2186, "strike": 460.0, "expiry": "280121", "type": "call", "percentage": 0.2}, {"ticker": "280616C500", "volume": 2173, "strike": 500.0, "expiry": "280616", "type": "call", "percentage": 0.2}], "top_3_oi": [{"ticker": "O:AAPL261016C00340000", "oi": 123203, "strike": 340, "expiry": "2026-10-16", "type": "call", "percentage": 2.8}, {"ticker": "O:AAPL270115C00300000", "oi": 64369, "strike": 300, "expiry": "2027-01-15", "type": "call", "percentage": 1.5}, {"ticker": "O:AAPL270115P00240000", "oi": 59111, "strike": 240, "expiry": "2027-01-15", "type": "put", "percentage": 1.3}], "top_3_leap_oi": [{"ticker": "O:AAPL270115C00300000", "oi": 64369, "strike": 300, "expiry": "2027-01-15", "type": "call", "percentage": 1.5}, {"ticker": "O:AAPL270115P00240000", "oi": 59111, "strike": 240, "expiry": "2027-01-15", "type": "put", "percentage": 1.3}, {"ticker": "O:AAPL270115C00350000", "oi": 56026, "strike": 350, "expiry": "2027-01-15", "type": "call", "percentage": 1.3}], "strike_concentration": {"range": "340-360", "oi": 788739, "percentage": 17.9, "dominant_strike": 350}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 8.3, "best_rank": 6, "worst_rank": 10, "today_rank": 7, "rank_change": -1, "trend": "stable", "streak": 10, "icon": "[HOT]"}, "original_rank": 2, "current_price": null}, {"ticker": "SPCX", "total_volume": 985895, "put_volume": 345626, "call_volume": 640269, "cp_volume_ratio": 1.85, "total_transactions": 157352, "avg_trade_size": 6.3, "contracts_count": 1790, "put_contracts": 761, "call_contracts": 1029, "total_oi": 3884482, "put_oi": 1969190, "call_oi": 1915292, "cp_oi_ratio": 0.97, "leap_cp_ratio": 1.52, "top_3_contracts_volume": [{"ticker": "261014C160", "volume": 53770, "strike": 160.0, "expiry": "261014", "type": "call", "percentage": 5.5}, {"ticker": "261014C157", "volume": 42305, "strike": 157.5, "expiry": "261014", "type": "call", "percentage": 4.3}, {"ticker": "261016C160", "volume": 40619, "strike": 160.0, "expiry": "261016", "type": "call", "percentage": 4.1}], "top_3_leap_volume": [{"ticker": "280616P160", "volume": 6755, "strike": 160.0, "expiry": "280616", "type": "put", "percentage": 0.7}, {"ticker": "280616C280", "volume": 6753, "strike": 280.0, "expiry": "280616", "type": "call", "percentage": 0.7}, {"ticker": "270115C200", "volume": 5223, "strike": 200.0, "expiry": "270115", "type": "call", "percentage": 0.5}], "top_3_oi": [{"ticker": "O:SPCX261016P00100000", "oi": 48054, "strike": 100, "expiry": "2026-10-16", "type": "put", "percentage": 1.2}, {"ticker": "O:SPCX261030C00190000", "oi": 42494, "strike": 190, "expiry": "2026-10-30", "type": "call", "percentage": 1.1}, {"ticker": "O:SPCX270115C00200000", "oi": 41257, "strike": 200, "expiry": "2027-01-15", "type": "call", "percentage": 1.1}], "top_3_leap_oi": [{"ticker": "O:SPCX270115C00200000", "oi": 41257, "strike": 200, "expiry": "2027-01-15", "type": "call", "percentage": 1.1}, {"ticker": "O:SPCX270617P00150000", "oi": 38489, "strike": 150, "expiry": "2027-06-17", "type": "put", "percentage": 1.0}, {"ticker": "O:SPCX270617P00120000", "oi": 29819, "strike": 120, "expiry": "2027-06-17", "type": "put", "percentage": 0.8}], "strike_concentration": {"range": "150-160", "oi": 382461, "percentage": 9.8, "dominant_strike": 150}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 9.8, "best_rank": 7, "worst_rank": 14, "today_rank": 10, "rank_change": -2, "trend": "stable", "streak": 10, "icon": "[HOT]"}, "original_rank": 3, "current_price": null}, {"ticker": "MU", "total_volume": 966431, "put_volume": 365052, "call_volume": 601379, "cp_volume_ratio": 1.65, "total_transactions": 292941, "avg_trade_size": 3.3, "contracts_count": 5745, "put_contracts": 2673, "call_contracts": 3072, "total_oi": 879035, "put_oi": 430287, "call_oi": 448748, "cp_oi_ratio": 1.04, "leap_cp_ratio": 1.06, "top_3_contracts_volume": [{"ticker": "261014C1000", "volume": 35968, "strike": 1000.0, "expiry": "261014", "type": "call", "percentage": 3.7}, {"ticker": "261014C950", "volume": 23415, "strike": 950.0, "expiry": "261014", "type": "call", "percentage": 2.4}, {"ticker": "261014C940", "volume": 22398, "strike": 940.0, "expiry": "261014", "type": "call", "percentage": 2.3}], "top_3_leap_volume": [{"ticker": "270115P360", "volume": 2219, "strike": 360.0, "expiry": "270115", "type": "put", "percentage": 0.2}, {"ticker": "280121P1240", "volume": 1510, "strike": 1240.0, "expiry": "280121", "type": "put", "percentage": 0.2}, {"ticker": "270115P700", "volume": 1443, "strike": 700.0, "expiry": "270115", "type": "put", "percentage": 0.1}], "top_3_oi": [{"ticker": "O:MU261016C01100000", "oi": 17375, "strike": 1100, "expiry": "2026-10-16", "type": "call", "percentage": 2.0}, {"ticker": "O:MU261016P00650000", "oi": 16528, "strike": 650, "expiry": "2026-10-16", "type": "put", "percentage": 1.9}, {"ticker": "O:MU261016C01250000", "oi": 16284, "strike": 1250, "expiry": "2026-10-16", "type": "call", "percentage": 1.9}], "top_3_leap_oi": [], "strike_concentration": {"range": "1000-1050", "oi": 101360, "percentage": 11.5, "dominant_strike": 1000}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 11.6, "best_rank": 7, "worst_rank": 20, "today_rank": 8, "rank_change": 1, "trend": "rising", "streak": 10, "icon": "[HOT]"}, "original_rank": 4, "current_price": null}, {"ticker": "TSLA", "total_volume": 925198, "put_volume": 392623, "call_volume": 532575, "cp_volume_ratio": 1.36, "total_transactions": 232071, "avg_trade_size": 4.0, "contracts_count": 2270, "put_contracts": 1034, "call_contracts": 1236, "total_oi": 3258743, "put_oi": 1292725, "call_oi": 1966018, "cp_oi_ratio": 1.52, "leap_cp_ratio": 1.45, "top_3_contracts_volume": [{"ticker": "261014C375", "volume": 54922, "strike": 375.0, "expiry": "261014", "type": "call", "percentage": 5.9}, {"ticker": "261014P372", "volume": 53921, "strike": 372.5, "expiry": "261014", "type": "put", "percentage": 5.8}, {"ticker": "261014P375", "volume": 53684, "strike": 375.0, "expiry": "261014", "type": "put", "percentage": 5.8}], "top_3_leap_volume": [{"ticker": "270416C430", "volume": 4874, "strike": 430.0, "expiry": "270416", "type": "call", "percentage": 0.5}, {"ticker": "270917P370", "volume": 2008, "strike": 370.0, "expiry": "270917", "type": "put", "percentage": 0.2}, {"ticker": "270917C470", "volume": 2002, "strike": 470.0, "expiry": "270917", "type": "call", "percentage": 0.2}], "top_3_oi": [{"ticker": "O:TSLA270115C00960000", "oi": 112040, "strike": 960, "expiry": "2027-01-15", "type": "call", "percentage": 3.4}, {"ticker": "O:TSLA270115C00940000", "oi": 93666, "strike": 940, "expiry": "2027-01-15", "type": "call", "percentage": 2.9}, {"ticker": "O:TSLA270115C00400000", "oi": 40053, "strike": 400, "expiry": "2027-01-15", "type": "call", "percentage": 1.2}], "top_3_leap_oi": [{"ticker": "O:TSLA270115C00960000", "oi": 112040, "strike": 960, "expiry": "2027-01-15", "type": "call", "percentage": 3.4}, {"ticker": "O:TSLA270115C00940000", "oi": 93666, "strike": 940, "expiry": "2027-01-15", "type": "call", "percentage": 2.9}, {"ticker": "O:TSLA270115C00400000", "oi": 40053, "strike": 400, "expiry": "2027-01-15", "type": "call", "percentage": 1.2}], "strike_concentration": {"range": "400-420", "oi": 238821, "percentage": 7.3, "dominant_strike": 400}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 5.7, "best_rank": 4, "worst_rank": 8, "today_rank": 5, "rank_change": -1, "trend": "stable", "streak": 10, "icon": "[HOT]"}, "original_rank": 5, "current_price": null}, {"ticker": "META", "total_volume": 893648, "put_volume": 379841, "call_volume": 513807, "cp_volume_ratio": 1.35, "total_transactions": 289473, "avg_trade_size": 3.1, "contracts_count": 3349, "put_contracts": 1415, "call_contracts": 1934, "total_oi": 862335, "put_oi": 350797, "call_oi": 511538, "cp_oi_ratio": 1.46, "leap_cp_ratio": 1.65, "top_3_contracts_volume": [{"ticker": "261014C770", "volume": 37083, "strike": 770.0, "expiry": "261014", "type": "call", "percentage": 4.1}, {"ticker": "261014C765", "volume": 31428, "strike": 765.0, "expiry": "261014", "type": "call", "percentage": 3.5}, {"ticker": "261014C780", "volume": 30508, "strike": 780.0, "expiry": "261014", "type": "call", "percentage": 3.4}], "top_3_leap_volume": [{"ticker": "270219C1080", "volume": 3706, "strike": 1080.0, "expiry": "270219", "type": "call", "percentage": 0.4}, {"ticker": "270115C850", "volume": 1280, "strike": 850.0, "expiry": "270115", "type": "call", "percentage": 0.1}, {"ticker": "270319C1000", "volume": 1137, "strike": 1000.0, "expiry": "270319", "type": "call", "percentage": 0.1}], "top_3_oi": [{"ticker": "O:META261016C00800000", "oi": 23132, "strike": 800, "expiry": "2026-10-16", "type": "call", "percentage": 2.7}, {"ticker": "O:META261016C00825000", "oi": 21335, "strike": 825, "expiry": "2026-10-16", "type": "call", "percentage": 2.5}, {"ticker": "O:META261016C00700000", "oi": 15624, "strike": 700, "expiry": "2026-10-16", "type": "call", "percentage": 1.8}], "top_3_leap_oi": [], "strike_concentration": {"range": "750-800", "oi": 171482, "percentage": 19.9, "dominant_strike": 750}, "history": {"appearances": 9, "appearance_rate": 90.0, "avg_rank": 15.2, "best_rank": 6, "worst_rank": 24, "today_rank": 6, "rank_change": 10, "trend": "rising", "streak": 2, "icon": "[HOT]"}, "original_rank": 6, "current_price": null}, {"ticker": "INTC", "total_volume": 835079, "put_volume": 285167, "call_volume": 549912, "cp_volume_ratio": 1.93, "total_transactions": 114931, "avg_trade_size": 7.3, "contracts_count": 1719, "put_contracts": 743, "call_contracts": 976, "total_oi": 6797903, "put_oi": 3225751, "call_oi": 3572152, "cp_oi_ratio": 1.11, "leap_cp_ratio": 0.88, "top_3_contracts_volume": [{"ticker": "261120C130", "volume": 40765, "strike": 130.0, "expiry": "261120", "type": "call", "percentage": 4.9}, {"ticker": "261016C105", "volume": 27282, "strike": 105.0, "expiry": "261016", "type": "call", "percentage": 3.3}, {"ticker": "261014C105", "volume": 18593, "strike": 105.0, "expiry": "261014", "type": "call", "percentage": 2.2}], "top_3_leap_volume": [{"ticker": "270617P80", "volume": 7806, "strike": 80.0, "expiry": "270617", "type": "put", "percentage": 0.9}, {"ticker": "270917P80", "volume": 4878, "strike": 80.0, "expiry": "270917", "type": "put", "percentage": 0.6}, {"ticker": "270319P80", "volume": 4657, "strike": 80.0, "expiry": "270319", "type": "put", "percentage": 0.6}], "top_3_oi": [{"ticker": "O:INTC261120C00130000", "oi": 95244, "strike": 130, "expiry": "2026-11-20", "type": "call", "percentage": 1.4}, {"ticker": "O:INTC261016C00130000", "oi": 71460, "strike": 130, "expiry": "2026-10-16", "type": "call", "percentage": 1.1}, {"ticker": "O:INTC261016C00120000", "oi": 69710, "strike": 120, "expiry": "2026-10-16", "type": "call", "percentage": 1.0}], "top_3_leap_oi": [{"ticker": "O:INTC270115C00040000", "oi": 49735, "strike": 40, "expiry": "2027-01-15", "type": "call", "percentage": 0.7}, {"ticker": "O:INTC270115P00015000", "oi": 44879, "strike": 15, "expiry": "2027-01-15", "type": "put", "percentage": 0.7}, {"ticker": "O:INTC270115P00020000", "oi": 44485, "strike": 20, "expiry": "2027-01-15", "type": "put", "percentage": 0.7}], "strike_concentration": {"range": "80-90", "oi": 628527, "percentage": 9.2, "dominant_strike": 80}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 11.7, "best_rank": 7, "worst_rank": 16, "today_rank": 11, "rank_change": 3, "trend": "stable", "streak": 10, "icon": "[HOT]"}, "original_rank": 7, "current_price": null}, {"ticker": "TLT", "total_volume": 700458, "put_volume": 293486, "call_volume": 406972, "cp_volume_ratio": 1.39, "total_transactions": 34414, "avg_trade_size": 20.4, "contracts_count": 1162, "put_contracts": 484, "call_contracts": 678, "total_oi": 11417521, "put_oi": 3942724, "call_oi": 7474797, "cp_oi_ratio": 1.9, "leap_cp_ratio": 1.58, "top_3_contracts_volume": [{"ticker": "261120P73", "volume": 31020, "strike": 73.0, "expiry": "261120", "type": "put", "percentage": 4.4}, {"ticker": "261016C79", "volume": 27988, "strike": 79.5, "expiry": "261016", "type": "call", "percentage": 4.0}, {"ticker": "261016C80", "volume": 27867, "strike": 80.5, "expiry": "261016", "type": "call", "percentage": 4.0}], "top_3_leap_volume": [{"ticker": "270115P77", "volume": 22057, "strike": 77.0, "expiry": "270115", "type": "put", "percentage": 3.1}, {"ticker": "270521C86", "volume": 13841, "strike": 86.0, "expiry": "270521", "type": "call", "percentage": 2.0}, {"ticker": "270521C80", "volume": 12858, "strike": 80.0, "expiry": "270521", "type": "call", "percentage": 1.8}], "top_3_oi": [{"ticker": "O:TLT261218C00090000", "oi": 342230, "strike": 90, "expiry": "2026-12-18", "type": "call", "percentage": 3.0}, {"ticker": "O:TLT261016C00083000", "oi": 181693, "strike": 83, "expiry": "2026-10-16", "type": "call", "percentage": 1.6}, {"ticker": "O:TLT261218P00073000", "oi": 157665, "strike": 73, "expiry": "2026-12-18", "type": "put", "percentage": 1.4}], "top_3_leap_oi": [{"ticker": "O:TLT270115C00090000", "oi": 146714, "strike": 90, "expiry": "2027-01-15", "type": "call", "percentage": 1.3}, {"ticker": "O:TLT270115C00110000", "oi": 137348, "strike": 110, "expiry": "2027-01-15", "type": "call", "percentage": 1.2}, {"ticker": "O:TLT270115C00085000", "oi": 131050, "strike": 85, "expiry": "2027-01-15", "type": "call", "percentage": 1.1}], "strike_concentration": {"range": "90-100", "oi": 1790554, "percentage": 15.7, "dominant_strike": 90}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 9.7, "best_rank": 5, "worst_rank": 16, "today_rank": 15, "rank_change": -4, "trend": "falling", "streak": 10, "icon": "[HOT]"}, "original_rank": 8, "current_price": null}, {"ticker": "HYG", "total_volume": 530812, "put_volume": 310928, "call_volume": 219884, "cp_volume_ratio": 0.71, "total_transactions": 3626, "avg_trade_size": 146.4, "contracts_count": 130, "put_contracts": 81, "call_contracts": 49, "total_oi": 10568438, "put_oi": 7769566, "call_oi": 2798872, "cp_oi_ratio": 0.36, "leap_cp_ratio": 3.71, "top_3_contracts_volume": [{"ticker": "270115C79", "volume": 96585, "strike": 79.0, "expiry": "270115", "type": "call", "percentage": 18.2}, {"ticker": "261120C79", "volume": 40428, "strike": 79.0, "expiry": "261120", "type": "call", "percentage": 7.6}, {"ticker": "261120P76", "volume": 37378, "strike": 76.0, "expiry": "261120", "type": "put", "percentage": 7.0}], "top_3_leap_volume": [{"ticker": "270115C79", "volume": 96585, "strike": 79.0, "expiry": "270115", "type": "call", "percentage": 18.2}, {"ticker": "270115C78", "volume": 15511, "strike": 78.0, "expiry": "270115", "type": "call", "percentage": 2.9}, {"ticker": "270416P75", "volume": 10000, "strike": 75.0, "expiry": "270416", "type": "put", "percentage": 1.9}], "top_3_oi": [{"ticker": "O:HYG261218P00075000", "oi": 772149, "strike": 75, "expiry": "2026-12-18", "type": "put", "percentage": 7.3}, {"ticker": "O:HYG261120P00077000", "oi": 312558, "strike": 77, "expiry": "2026-11-20", "type": "put", "percentage": 3.0}, {"ticker": "O:HYG261120P00078000", "oi": 251805, "strike": 78, "expiry": "2026-11-20", "type": "put", "percentage": 2.4}], "top_3_leap_oi": [{"ticker": "O:HYG270115C00079000", "oi": 204664, "strike": 79, "expiry": "2027-01-15", "type": "call", "percentage": 1.9}, {"ticker": "O:HYG270115P00075000", "oi": 198943, "strike": 75, "expiry": "2027-01-15", "type": "put", "percentage": 1.9}, {"ticker": "O:HYG270115P00077000", "oi": 193452, "strike": 77, "expiry": "2027-01-15", "type": "put", "percentage": 1.8}], "strike_concentration": {"range": "70-80", "oi": 8454621, "percentage": 80.0, "dominant_strike": 75}, "history": {"appearances": 8, "appearance_rate": 80.0, "avg_rank": 16.5, "best_rank": 8, "worst_rank": 23, "today_rank": 23, "rank_change": -3, "trend": "falling", "streak": 1, "icon": "[ACT]"}, "original_rank": 9, "current_price": null}, {"ticker": "AMZN", "total_volume": 523956, "put_volume": 152570, "call_volume": 371386, "cp_volume_ratio": 2.43, "total_transactions": 114866, "avg_trade_size": 4.6, "contracts_count": 1376, "put_contracts": 603, "call_contracts": 773, "total_oi": 4982319, "put_oi": 2038040, "call_oi": 2944279, "cp_oi_ratio": 1.44, "leap_cp_ratio": 1.81, "top_3_contracts_volume": [{"ticker": "261014C262", "volume": 38675, "strike": 262.5, "expiry": "261014", "type": "call", "percentage": 7.4}, {"ticker": "261014C265", "volume": 31246, "strike": 265.0, "expiry": "261014", "type": "call", "percentage": 6.0}, {"ticker": "261016C265", "volume": 20459, "strike": 265.0, "expiry": "261016", "type": "call", "percentage": 3.9}], "top_3_leap_volume": [{"ticker": "270115C300", "volume": 4908, "strike": 300.0, "expiry": "270115", "type": "call", "percentage": 0.9}, {"ticker": "270115C285", "volume": 2318, "strike": 285.0, "expiry": "270115", "type": "call", "percentage": 0.4}, {"ticker": "280121P300", "volume": 1834, "strike": 300.0, "expiry": "280121", "type": "put", "percentage": 0.4}], "top_3_oi": [{"ticker": "O:AMZN270115C00300000", "oi": 69123, "strike": 300, "expiry": "2027-01-15", "type": "call", "percentage": 1.4}, {"ticker": "O:AMZN270115C00275000", "oi": 66342, "strike": 275, "expiry": "2027-01-15", "type": "call", "percentage": 1.3}, {"ticker": "O:AMZN280121C00370000", "oi": 49651, "strike": 370, "expiry": "2028-01-21", "type": "call", "percentage": 1.0}], "top_3_leap_oi": [{"ticker": "O:AMZN270115C00300000", "oi": 69123, "strike": 300, "expiry": "2027-01-15", "type": "call", "percentage": 1.4}, {"ticker": "O:AMZN270115C00275000", "oi": 66342, "strike": 275, "expiry": "2027-01-15", "type": "call", "percentage": 1.3}, {"ticker": "O:AMZN280121C00370000", "oi": 49651, "strike": 370, "expiry": "2028-01-21", "type": "call", "percentage": 1.0}], "strike_concentration": {"range": "240-260", "oi": 672567, "percentage": 13.5, "dominant_strike": 250}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 12.2, "best_rank": 9, "worst_rank": 15, "today_rank": 12, "rank_change": -2, "trend": "stable", "streak": 10, "icon": "[HOT]"}, "original_rank": 10, "current_price": null}, {"ticker": "AMD", "total_volume": 497106, "put_volume": 201874, "call_volume": 295232, "cp_volume_ratio": 1.46, "total_transactions": 148068, "avg_trade_size": 3.4, "contracts_count": 3072, "put_contracts": 1348, "call_contracts": 1724, "total_oi": 698962, "put_oi": 361007, "call_oi": 337955, "cp_oi_ratio": 0.94, "leap_cp_ratio": 1.07, "top_3_contracts_volume": [{"ticker": "261014C600", "volume": 17914, "strike": 600.0, "expiry": "261014", "type": "call", "percentage": 3.6}, {"ticker": "261014C610", "volume": 11104, "strike": 610.0, "expiry": "261014", "type": "call", "percentage": 2.2}, {"ticker": "261014C620", "volume": 9673, "strike": 620.0, "expiry": "261014", "type": "call", "percentage": 1.9}], "top_3_leap_volume": [{"ticker": "270115P400", "volume": 2942, "strike": 400.0, "expiry": "270115", "type": "put", "percentage": 0.6}, {"ticker": "270115C730", "volume": 2439, "strike": 730.0, "expiry": "270115", "type": "call", "percentage": 0.5}, {"ticker": "270115C820", "volume": 2398, "strike": 820.0, "expiry": "270115", "type": "call", "percentage": 0.5}], "top_3_oi": [{"ticker": "O:AMD261016P00400000", "oi": 9356, "strike": 400, "expiry": "2026-10-16", "type": "put", "percentage": 1.3}, {"ticker": "O:AMD261016C00490000", "oi": 8631, "strike": 490, "expiry": "2026-10-16", "type": "call", "percentage": 1.2}, {"ticker": "O:AMD261016P00370000", "oi": 8530, "strike": 370, "expiry": "2026-10-16", "type": "put", "percentage": 1.2}], "top_3_leap_oi": [], "strike_concentration": {"range": "600-650", "oi": 157611, "percentage": 22.5, "dominant_strike": 600}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 18.5, "best_rank": 14, "worst_rank": 24, "today_rank": 14, "rank_change": 3, "trend": "stable", "streak": 10, "icon": "[HOT]"}, "original_rank": 11, "current_price": null}, {"ticker": "MSFT", "total_volume": 459172, "put_volume": 171280, "call_volume": 287892, "cp_volume_ratio": 1.68, "total_transactions": 111429, "avg_trade_size": 4.1, "contracts_count": 2224, "put_contracts": 1021, "call_contracts": 1203, "total_oi": 3275713, "put_oi": 1184850, "call_oi": 2090863, "cp_oi_ratio": 1.76, "leap_cp_ratio": 1.34, "top_3_contracts_volume": [{"ticker": "261014C550", "volume": 22621, "strike": 550.0, "expiry": "261014", "type": "call", "percentage": 4.9}, {"ticker": "261030C555", "volume": 15633, "strike": 555.0, "expiry": "261030", "type": "call", "percentage": 3.4}, {"ticker": "261030C575", "volume": 15498, "strike": 575.0, "expiry": "261030", "type": "call", "percentage": 3.4}], "top_3_leap_volume": [{"ticker": "270115P450", "volume": 2829, "strike": 450.0, "expiry": "270115", "type": "put", "percentage": 0.6}, {"ticker": "270115P540", "volume": 2377, "strike": 540.0, "expiry": "270115", "type": "put", "percentage": 0.5}, {"ticker": "270115C540", "volume": 2285, "strike": 540.0, "expiry": "270115", "type": "call", "percentage": 0.5}], "top_3_oi": [{"ticker": "O:MSFT261218C00575000", "oi": 132503, "strike": 575, "expiry": "2026-12-18", "type": "call", "percentage": 4.0}, {"ticker": "O:MSFT261218C00625000", "oi": 102247, "strike": 625, "expiry": "2026-12-18", "type": "call", "percentage": 3.1}, {"ticker": "O:MSFT261016C00550000", "oi": 61182, "strike": 550, "expiry": "2026-10-16", "type": "call", "percentage": 1.9}], "top_3_leap_oi": [{"ticker": "O:MSFT270115C00625000", "oi": 52034, "strike": 625, "expiry": "2027-01-15", "type": "call", "percentage": 1.6}, {"ticker": "O:MSFT270115C00575000", "oi": 27489, "strike": 575, "expiry": "2027-01-15", "type": "call", "percentage": 0.8}, {"ticker": "O:MSFT270115C00675000", "oi": 25481, "strike": 675, "expiry": "2027-01-15", "type": "call", "percentage": 0.8}], "strike_concentration": {"range": "550-600", "oi": 637061, "percentage": 19.4, "dominant_strike": 575}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 19.2, "best_rank": 12, "worst_rank": 27, "today_rank": 13, "rank_change": 6, "trend": "stable", "streak": 10, "icon": "[HOT]"}, "original_rank": 12, "current_price": null}, {"ticker": "CIFR", "total_volume": 450747, "put_volume": 88991, "call_volume": 361756, "cp_volume_ratio": 4.07, "total_transactions": 27767, "avg_trade_size": 16.2, "contracts_count": 690, "put_contracts": 287, "call_contracts": 403, "total_oi": 1867851, "put_oi": 463294, "call_oi": 1404557, "cp_oi_ratio": 3.03, "leap_cp_ratio": 5.48, "top_3_contracts_volume": [{"ticker": "270115C11", "volume": 25897, "strike": 11.0, "expiry": "270115", "type": "call", "percentage": 5.7}, {"ticker": "270115C13", "volume": 24571, "strike": 13.0, "expiry": "270115", "type": "call", "percentage": 5.5}, {"ticker": "261016C13", "volume": 15623, "strike": 13.0, "expiry": "261016", "type": "call", "percentage": 3.5}], "top_3_leap_volume": [{"ticker": "270115C11", "volume": 25897, "strike": 11.0, "expiry": "270115", "type": "call", "percentage": 5.7}, {"ticker": "270115C13", "volume": 24571, "strike": 13.0, "expiry": "270115", "type": "call", "percentage": 5.5}, {"ticker": "290119P4", "volume": 11429, "strike": 4.0, "expiry": "290119", "type": "put", "percentage": 2.5}], "top_3_oi": [{"ticker": "O:CIFR270115C00020000", "oi": 69123, "strike": 20, "expiry": "2027-01-15", "type": "call", "percentage": 3.7}, {"ticker": "O:CIFR261120C00022000", "oi": 40217, "strike": 22, "expiry": "2026-11-20", "type": "call", "percentage": 2.2}, {"ticker": "O:CIFR270115C00019000", "oi": 38820, "strike": 19, "expiry": "2027-01-15", "type": "call", "percentage": 2.1}], "top_3_leap_oi": [{"ticker": "O:CIFR270115C00020000", "oi": 69123, "strike": 20, "expiry": "2027-01-15", "type": "call", "percentage": 3.7}, {"ticker": "O:CIFR270115C00019000", "oi": 38820, "strike": 19, "expiry": "2027-01-15", "type": "call", "percentage": 2.1}, {"ticker": "O:CIFR270115C00015000", "oi": 37435, "strike": 15, "expiry": "2027-01-15", "type": "call", "percentage": 2.0}], "strike_concentration": {"range": "20-25", "oi": 452558, "percentage": 24.2, "dominant_strike": 20}, "history": {"appearances": 0, "appearance_rate": 0.0, "avg_rank": null, "best_rank": null, "worst_rank": null, "today_rank": null, "rank_change": null, "trend": "new", "streak": 0, "icon": "[NEW]"}, "original_rank": 13, "current_price": null}, {"ticker": "EWZ", "total_volume": 423866, "put_volume": 184479, "call_volume": 239387, "cp_volume_ratio": 1.3, "total_transactions": 9702, "avg_trade_size": 43.7, "contracts_count": 440, "put_contracts": 196, "call_contracts": 244, "total_oi": 11463495, "put_oi": 3083114, "call_oi": 8380381, "cp_oi_ratio": 2.72, "leap_cp_ratio": 11.04, "top_3_contracts_volume": [{"ticker": "261023P41", "volume": 51988, "strike": 41.5, "expiry": "261023", "type": "put", "percentage": 12.3}, {"ticker": "261023C44", "volume": 33508, "strike": 44.5, "expiry": "261023", "type": "call", "percentage": 7.9}, {"ticker": "261016P42", "volume": 19346, "strike": 42.0, "expiry": "261016", "type": "put", "percentage": 4.6}], "top_3_leap_volume": [{"ticker": "270319C54", "volume": 8034, "strike": 54.0, "expiry": "270319", "type": "call", "percentage": 1.9}, {"ticker": "270115C47", "volume": 6879, "strike": 47.0, "expiry": "270115", "type": "call", "percentage": 1.6}, {"ticker": "270115C48", "volume": 6344, "strike": 48.0, "expiry": "270115", "type": "call", "percentage": 1.5}], "top_3_oi": [{"ticker": "O:EWZ261120C00043000", "oi": 824910, "strike": 43, "expiry": "2026-11-20", "type": "call", "percentage": 7.2}, {"ticker": "O:EWZ261120C00045000", "oi": 699474, "strike": 45, "expiry": "2026-11-20", "type": "call", "percentage": 6.1}, {"ticker": "O:EWZ261218C00050000", "oi": 386686, "strike": 50, "expiry": "2026-12-18", "type": "call", "percentage": 3.4}], "top_3_leap_oi": [{"ticker": "O:EWZ270115C00050000", "oi": 175847, "strike": 50, "expiry": "2027-01-15", "type": "call", "percentage": 1.5}, {"ticker": "O:EWZ270115C00055000", "oi": 134572, "strike": 55, "expiry": "2027-01-15", "type": "call", "percentage": 1.2}, {"ticker": "O:EWZ270319C00045000", "oi": 95270, "strike": 45, "expiry": "2027-03-19", "type": "call", "percentage": 0.8}], "strike_concentration": {"range": "40-45", "oi": 3352586, "percentage": 29.2, "dominant_strike": 43}, "history": {"appearances": 9, "appearance_rate": 90.0, "avg_rank": 13.0, "best_rank": 6, "worst_rank": 19, "today_rank": 13, "rank_change": 6, "trend": "falling", "streak": 0, "icon": "[HOT]"}, "original_rank": 14, "current_price": null}, {"ticker": "GOOGL", "total_volume": 422907, "put_volume": 100203, "call_volume": 322704, "cp_volume_ratio": 3.22, "total_transactions": 92952, "avg_trade_size": 4.5, "contracts_count": 1827, "put_contracts": 789, "call_contracts": 1038, "total_oi": 2416596, "put_oi": 900902, "call_oi": 1515694, "cp_oi_ratio": 1.68, "leap_cp_ratio": 2.48, "top_3_contracts_volume": [{"ticker": "261014C360", "volume": 25466, "strike": 360.0, "expiry": "261014", "type": "call", "percentage": 6.0}, {"ticker": "261014C357", "volume": 20763, "strike": 357.5, "expiry": "261014", "type": "call", "percentage": 4.9}, {"ticker": "261016C360", "volume": 17946, "strike": 360.0, "expiry": "261016", "type": "call", "percentage": 4.2}], "top_3_leap_volume": [{"ticker": "270115C400", "volume": 3109, "strike": 400.0, "expiry": "270115", "type": "call", "percentage": 0.7}, {"ticker": "270115C390", "volume": 1991, "strike": 390.0, "expiry": "270115", "type": "call", "percentage": 0.5}, {"ticker": "270115C350", "volume": 1452, "strike": 350.0, "expiry": "270115", "type": "call", "percentage": 0.3}], "top_3_oi": [{"ticker": "O:GOOGL261016C00375000", "oi": 67137, "strike": 375, "expiry": "2026-10-16", "type": "call", "percentage": 2.8}, {"ticker": "O:GOOGL261120C00380000", "oi": 38936, "strike": 380, "expiry": "2026-11-20", "type": "call", "percentage": 1.6}, {"ticker": "O:GOOGL261016C00370000", "oi": 37624, "strike": 370, "expiry": "2026-10-16", "type": "call", "percentage": 1.6}], "top_3_leap_oi": [{"ticker": "O:GOOGL270115C00400000", "oi": 26059, "strike": 400, "expiry": "2027-01-15", "type": "call", "percentage": 1.1}, {"ticker": "O:GOOGL270115C00350000", "oi": 25120, "strike": 350, "expiry": "2027-01-15", "type": "call", "percentage": 1.0}, {"ticker": "O:GOOGL270115C00450000", "oi": 17713, "strike": 450, "expiry": "2027-01-15", "type": "call", "percentage": 0.7}], "strike_concentration": {"range": "360-380", "oi": 350305, "percentage": 14.5, "dominant_strike": 370}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 19.3, "best_rank": 13, "worst_rank": 26, "today_rank": 16, "rank_change": 5, "trend": "stable", "streak": 10, "icon": "[HOT]"}, "original_rank": 15, "current_price": null}, {"ticker": "DRAM", "total_volume": 385162, "put_volume": 139344, "call_volume": 245818, "cp_volume_ratio": 1.76, "total_transactions": 45562, "avg_trade_size": 8.5, "contracts_count": 1331, "put_contracts": 538, "call_contracts": 793, "total_oi": 2532845, "put_oi": 906789, "call_oi": 1626056, "cp_oi_ratio": 1.79, "leap_cp_ratio": 2.08, "top_3_contracts_volume": [{"ticker": "261120C55", "volume": 27254, "strike": 55.0, "expiry": "261120", "type": "call", "percentage": 7.1}, {"ticker": "261218C60", "volume": 19734, "strike": 60.0, "expiry": "261218", "type": "call", "percentage": 5.1}, {"ticker": "261120P52", "volume": 13159, "strike": 52.0, "expiry": "261120", "type": "put", "percentage": 3.4}], "top_3_leap_volume": [{"ticker": "270115P43", "volume": 12434, "strike": 43.0, "expiry": "270115", "type": "put", "percentage": 3.2}, {"ticker": "290119C60", "volume": 10537, "strike": 60.0, "expiry": "290119", "type": "call", "percentage": 2.7}, {"ticker": "270319C80", "volume": 4653, "strike": 80.0, "expiry": "270319", "type": "call", "percentage": 1.2}], "top_3_oi": [{"ticker": "O:DRAM261016C00122000", "oi": 51044, "strike": 122, "expiry": "2026-10-16", "type": "call", "percentage": 2.0}, {"ticker": "O:DRAM261120C00122000", "oi": 45740, "strike": 122, "expiry": "2026-11-20", "type": "call", "percentage": 1.8}, {"ticker": "O:DRAM261218C00070000", "oi": 41322, "strike": 70, "expiry": "2026-12-18", "type": "call", "percentage": 1.6}], "top_3_leap_oi": [{"ticker": "O:DRAM280121C00090000", "oi": 31962, "strike": 90, "expiry": "2028-01-21", "type": "call", "percentage": 1.3}, {"ticker": "O:DRAM270115C00060000", "oi": 27179, "strike": 60, "expiry": "2027-01-15", "type": "call", "percentage": 1.1}, {"ticker": "O:DRAM270115C00122000", "oi": 23005, "strike": 122, "expiry": "2027-01-15", "type": "call", "percentage": 0.9}], "strike_concentration": {"range": "60-70", "oi": 456701, "percentage": 18.0, "dominant_strike": 60}, "history": {"appearances": 2, "appearance_rate": 20.0, "avg_rank": 27.0, "best_rank": 26, "worst_rank": 28, "today_rank": 28, "rank_change": -2, "trend": "stable", "streak": 1, "icon": "[NEW]"}, "original_rank": 16, "current_price": null}, {"ticker": "SOFI", "total_volume": 369222, "put_volume": 69230, "call_volume": 299992, "cp_volume_ratio": 4.33, "total_transactions": 29194, "avg_trade_size": 12.6, "contracts_count": 618, "put_contracts": 261, "call_contracts": 357, "total_oi": 4095102, "put_oi": 1424135, "call_oi": 2670967, "cp_oi_ratio": 1.88, "leap_cp_ratio": 2.9, "top_3_contracts_volume": [{"ticker": "261120C27", "volume": 32234, "strike": 27.0, "expiry": "261120", "type": "call", "percentage": 8.7}, {"ticker": "261120C30", "volume": 20639, "strike": 30.0, "expiry": "261120", "type": "call", "percentage": 5.6}, {"ticker": "261120C29", "volume": 18619, "strike": 29.0, "expiry": "261120", "type": "call", "percentage": 5.0}], "top_3_leap_volume": [{"ticker": "270115C25", "volume": 3380, "strike": 25.0, "expiry": "270115", "type": "call", "percentage": 0.9}, {"ticker": "270115C20", "volume": 3139, "strike": 20.0, "expiry": "270115", "type": "call", "percentage": 0.9}, {"ticker": "270115C15", "volume": 2087, "strike": 15.0, "expiry": "270115", "type": "call", "percentage": 0.6}], "top_3_oi": [{"ticker": "O:SOFI270115C00020000", "oi": 109919, "strike": 20, "expiry": "2027-01-15", "type": "call", "percentage": 2.7}, {"ticker": "O:SOFI270115C00025000", "oi": 100290, "strike": 25, "expiry": "2027-01-15", "type": "call", "percentage": 2.4}, {"ticker": "O:SOFI270115C00030000", "oi": 76806, "strike": 30, "expiry": "2027-01-15", "type": "call", "percentage": 1.9}], "top_3_leap_oi": [{"ticker": "O:SOFI270115C00020000", "oi": 109919, "strike": 20, "expiry": "2027-01-15", "type": "call", "percentage": 2.7}, {"ticker": "O:SOFI270115C00025000", "oi": 100290, "strike": 25, "expiry": "2027-01-15", "type": "call", "percentage": 2.4}, {"ticker": "O:SOFI270115C00030000", "oi": 76806, "strike": 30, "expiry": "2027-01-15", "type": "call", "percentage": 1.9}], "strike_concentration": {"range": "20-25", "oi": 746565, "percentage": 18.2, "dominant_strike": 20}, "history": {"appearances": 6, "appearance_rate": 60.0, "avg_rank": 25.7, "best_rank": 19, "worst_rank": 30, "today_rank": 19, "rank_change": 8, "trend": "stable", "streak": 4, "icon": "[ACT]"}, "original_rank": 17, "current_price": null}, {"ticker": "CRWV", "total_volume": 364112, "put_volume": 190623, "call_volume": 173489, "cp_volume_ratio": 0.91, "total_transactions": 45061, "avg_trade_size": 8.1, "contracts_count": 1126, "put_contracts": 477, "call_contracts": 649, "total_oi": 2946481, "put_oi": 1433627, "call_oi": 1512854, "cp_oi_ratio": 1.06, "leap_cp_ratio": 0.73, "top_3_contracts_volume": [{"ticker": "261016C80", "volume": 20118, "strike": 80.0, "expiry": "261016", "type": "call", "percentage": 5.5}, {"ticker": "261218P65", "volume": 16022, "strike": 65.0, "expiry": "261218", "type": "put", "percentage": 4.4}, {"ticker": "270319P47", "volume": 10257, "strike": 47.5, "expiry": "270319", "type": "put", "percentage": 2.8}], "top_3_leap_volume": [{"ticker": "270319P47", "volume": 10257, "strike": 47.5, "expiry": "270319", "type": "put", "percentage": 2.8}, {"ticker": "270319C150", "volume": 10173, "strike": 150.0, "expiry": "270319", "type": "call", "percentage": 2.8}, {"ticker": "270617P55", "volume": 9148, "strike": 55.0, "expiry": "270617", "type": "put", "percentage": 2.5}], "top_3_oi": [{"ticker": "O:CRWV281215P00035000", "oi": 70894, "strike": 35, "expiry": "2028-12-15", "type": "put", "percentage": 2.4}, {"ticker": "O:CRWV261023C00110000", "oi": 48517, "strike": 110, "expiry": "2026-10-23", "type": "call", "percentage": 1.6}, {"ticker": "O:CRWV261023C00105000", "oi": 44395, "strike": 105, "expiry": "2026-10-23", "type": "call", "percentage": 1.5}], "top_3_leap_oi": [{"ticker": "O:CRWV281215P00035000", "oi": 70894, "strike": 35, "expiry": "2028-12-15", "type": "put", "percentage": 2.4}, {"ticker": "O:CRWV270115P00070000", "oi": 35780, "strike": 70, "expiry": "2027-01-15", "type": "put", "percentage": 1.2}, {"ticker": "O:CRWV280121C00150000", "oi": 31770, "strike": 150, "expiry": "2028-01-21", "type": "call", "percentage": 1.1}], "strike_concentration": {"range": "70-80", "oi": 356345, "percentage": 12.1, "dominant_strike": 70}, "history": {"appearances": 4, "appearance_rate": 40.0, "avg_rank": 27.8, "best_rank": 26, "worst_rank": 30, "today_rank": 26, "rank_change": 0, "trend": "stable", "streak": 1, "icon": "[OCC]"}, "original_rank": 18, "current_price": null}, {"ticker": "IBIT", "total_volume": 337937, "put_volume": 177392, "call_volume": 160545, "cp_volume_ratio": 0.91, "total_transactions": 30341, "avg_trade_size": 11.1, "contracts_count": 1267, "put_contracts": 553, "call_contracts": 714, "total_oi": 6702653, "put_oi": 2778457, "call_oi": 3924196, "cp_oi_ratio": 1.41, "leap_cp_ratio": 0.35, "top_3_contracts_volume": [{"ticker": "261013P47", "volume": 11090, "strike": 47.5, "expiry": "261013", "type": "put", "percentage": 3.3}, {"ticker": "270115P40", "volume": 11060, "strike": 40.0, "expiry": "270115", "type": "put", "percentage": 3.3}, {"ticker": "261013P47", "volume": 10768, "strike": 47.0, "expiry": "261013", "type": "put", "percentage": 3.2}], "top_3_leap_volume": [{"ticker": "270115P40", "volume": 11060, "strike": 40.0, "expiry": "270115", "type": "put", "percentage": 3.3}, {"ticker": "270115P30", "volume": 10178, "strike": 30.0, "expiry": "270115", "type": "put", "percentage": 3.0}, {"ticker": "270617P40", "volume": 10162, "strike": 40.0, "expiry": "270617", "type": "put", "percentage": 3.0}], "top_3_oi": [{"ticker": "O:IBIT261016C00050000", "oi": 76131, "strike": 50, "expiry": "2026-10-16", "type": "call", "percentage": 1.1}, {"ticker": "O:IBIT270115C00050000", "oi": 64914, "strike": 50, "expiry": "2027-01-15", "type": "call", "percentage": 1.0}, {"ticker": "O:IBIT270115P00030000", "oi": 58297, "strike": 30, "expiry": "2027-01-15", "type": "put", "percentage": 0.9}], "top_3_leap_oi": [{"ticker": "O:IBIT270115C00050000", "oi": 64914, "strike": 50, "expiry": "2027-01-15", "type": "call", "percentage": 1.0}, {"ticker": "O:IBIT270115P00030000", "oi": 58297, "strike": 30, "expiry": "2027-01-15", "type": "put", "percentage": 0.9}, {"ticker": "O:IBIT270115C00060000", "oi": 57911, "strike": 60, "expiry": "2027-01-15", "type": "call", "percentage": 0.9}], "strike_concentration": {"range": "40-45", "oi": 845044, "percentage": 12.6, "dominant_strike": 40}, "history": {"appearances": 10, "appearance_rate": 100.0, "avg_rank": 18.1, "best_rank": 12, "worst_rank": 24, "today_rank": 21, "rank_change": 1, "trend": "stable", "streak": 10, "icon": "[HOT]"}, "original_rank": 19, "current_price": null}, {"ticker": "IREN", "total_volume": 334230, "put_volume": 115798, "call_volume": 218432, "cp_volume_ratio": 1.89, "total_transactions": 40496, "avg_trade_size": 8.3, "contracts_count": 972, "put_contracts": 399, "call_contracts": 573, "total_oi": 3211033, "put_oi": 1426300, "call_oi": 1784733, "cp_oi_ratio": 1.25, "leap_cp_ratio": 1.32, "top_3_contracts_volume": [{"ticker": "261016C35", "volume": 21037, "strike": 35.0, "expiry": "261016", "type": "call", "percentage": 6.3}, {"ticker": "261016C36", "volume": 15736, "strike": 36.0, "expiry": "261016", "type": "call", "percentage": 4.7}, {"ticker": "290119P10", "volume": 11028, "strike": 10.0, "expiry": "290119", "type": "put", "percentage": 3.3}], "top_3_leap_volume": [{"ticker": "290119P10", "volume": 11028, "strike": 10.0, "expiry": "290119", "type": "put", "percentage": 3.3}, {"ticker": "270319C65", "volume": 4477, "strike": 65.0, "expiry": "270319", "type": "call", "percentage": 1.3}, {"ticker": "270617P15", "volume": 3699, "strike": 15.0, "expiry": "270617", "type": "put", "percentage": 1.1}], "top_3_oi": [{"ticker": "O:IREN270115P00030000", "oi": 76046, "strike": 30, "expiry": "2027-01-15", "type": "put", "percentage": 2.4}, {"ticker": "O:IREN290119P00010000", "oi": 66267, "strike": 10, "expiry": "2029-01-19", "type": "put", "percentage": 2.1}, {"ticker": "O:IREN270115C00110000", "oi": 59991, "strike": 110, "expiry": "2027-01-15", "type": "call", "percentage": 1.9}], "top_3_leap_oi": [{"ticker": "O:IREN270115P00030000", "oi": 76046, "strike": 30, "expiry": "2027-01-15", "type": "put", "percentage": 2.4}, {"ticker": "O:IREN290119P00010000", "oi": 66267, "strike": 10, "expiry": "2029-01-19", "type": "put", "percentage": 2.1}, {"ticker": "O:IREN270115C00110000", "oi": 59991, "strike": 110, "expiry": "2027-01-15", "type": "call", "percentage": 1.9}], "strike_concentration": {"range": "30-35", "oi": 328264, "percentage": 10.2, "dominant_strike": 30}, "history": {"appearances": 3, "appearance_rate": 30.0, "avg_rank": 22.7, "best_rank": 17, "worst_rank": 26, "today_rank": 25, "rank_change": -8, "trend": "stable", "streak": 1, "icon": "[OCC]"}, "original_rank": 20, "current_price": null}, {"ticker": "XLF", "total_volume": 324420, "put_volume": 164217, "call_volume": 160203, "cp_volume_ratio": 0.98, "total_transactions": 19421, "avg_trade_size": 16.7, "contracts_count": 645, "put_contracts": 286, "call_contracts": 359, "total_oi": 6226039, "put_oi": 3650429, "call_oi": 2575610, "cp_oi_ratio": 0.71, "leap_cp_ratio": 0.23, "top_3_contracts_volume": [{"ticker": "270319P54", "volume": 44486, "strike": 54.0, "expiry": "270319", "type": "put", "percentage": 13.7}, {"ticker": "261023P53", "volume": 33660, "strike": 53.0, "expiry": "261023", "type": "put", "percentage": 10.4}, {"ticker": "261120C56", "volume": 17507, "strike": 56.0, "expiry": "261120", "type": "call", "percentage": 5.4}], "top_3_leap_volume": [{"ticker": "270319P54", "volume": 44486, "strike": 54.0, "expiry": "270319", "type": "put", "percentage": 13.7}, {"ticker": "270319P50", "volume": 7554, "strike": 50.0, "expiry": "270319", "type": "put", "percentage": 2.3}, {"ticker": "270115P51", "volume": 4204, "strike": 51.0, "expiry": "270115", "type": "put", "percentage": 1.3}], "top_3_oi": [{"ticker": "O:XLF261120P00054000", "oi": 184418, "strike": 54, "expiry": "2026-11-20", "type": "put", "percentage": 3.0}, {"ticker": "O:XLF261120P00053000", "oi": 131088, "strike": 53, "expiry": "2026-11-20", "type": "put", "percentage": 2.1}, {"ticker": "O:XLF270115C00075000", "oi": 130195, "strike": 75, "expiry": "2027-01-15", "type": "call", "percentage": 2.1}], "top_3_leap_oi": [{"ticker": "O:XLF270115C00075000", "oi": 130195, "strike": 75, "expiry": "2027-01-15", "type": "call", "percentage": 2.1}, {"ticker": "O:XLF270319C00075000", "oi": 127864, "strike": 75, "expiry": "2027-03-19", "type": "call", "percentage": 2.1}, {"ticker": "O:XLF270115C00055000", "oi": 83934, "strike": 55, "expiry": "2027-01-15", "type": "call", "percentage": 1.3}], "strike_concentration": {"range": "50-60", "oi": 3548430, "percentage": 57.0, "dominant_strike": 50}, "history": {"appearances": 3, "appearance_rate": 30.0, "avg_rank": 23.3, "best_rank": 20, "worst_rank": 25, "today_rank": 20, "rank_change": 5, "trend": "stable", "streak": 0, "icon": "[OCC]"}, "original_rank": 21, "current_price": null}, {"ticker": "PLTR", "total_volume": 319981, "put_volume": 146546, "call_volume": 173435, "cp_volume_ratio": 1.18, "total_transactions": 71360, "avg_trade_size": 4.5, "contracts_count": 1445, "put_contracts": 660, "call_contracts": 785, "total_oi": 3586170, "put_oi": 1898554, "call_oi": 1687616, "cp_oi_ratio": 0.89, "leap_cp_ratio": 0.8, "top_3_contracts_volume": [{"ticker": "261016C210", "volume": 24849, "strike": 210.0, "expiry": "261016", "type": "call", "percentage": 7.8}, {"ticker": "261016C215", "volume": 17372, "strike": 215.0, "expiry": "261016", "type": "call", "percentage": 5.4}, {"ticker": "261016P207", "volume": 16107, "strike": 207.5, "expiry": "261016", "type": "put", "percentage": 5.0}], "top_3_leap_volume": [{"ticker": "270319P100", "volume": 2518, "strike": 100.0, "expiry": "270319", "type": "put", "percentage": 0.8}, {"ticker": "270319P90", "volume": 2501, "strike": 90.0, "expiry": "270319", "type": "put", "percentage": 0.8}, {"ticker": "270115P130", "volume": 887, "strike": 130.0, "expiry": "270115", "type": "put", "percentage": 0.3}], "top_3_oi": [{"ticker": "O:PLTR261218P00140000", "oi": 93692, "strike": 140, "expiry": "2026-12-18", "type": "put", "percentage": 2.6}, {"ticker": "O:PLTR270115P00050000", "oi": 53275, "strike": 50, "expiry": "2027-01-15", "type": "put", "percentage": 1.5}, {"ticker": "O:PLTR261218C00175000", "oi": 52072, "strike": 175, "expiry": "2026-12-18", "type": "call", "percentage": 1.5}], "top_3_leap_oi": [{"ticker": "O:PLTR270115P00050000", "oi": 53275, "strike": 50, "expiry": "2027-01-15", "type": "put", "percentage": 1.5}, {"ticker": "O:PLTR271217P00035000", "oi": 28166, "strike": 35, "expiry": "2027-12-17", "type": "put", "percentage": 0.8}, {"ticker": "O:PLTR270319P00100000", "oi": 27382, "strike": 100, "expiry": "2027-03-19", "type": "put", "percentage": 0.8}], "strike_concentration": {"range": "140-150", "oi": 230597, "percentage": 6.4, "dominant_strike": 140}, "history": {"appearances": 4, "appearance_rate": 40.0, "avg_rank": 17.8, "best_rank": 12, "worst_rank": 28, "today_rank": 18, "rank_change": -6, "trend": "rising", "streak": 3, "icon": "[OCC]"}, "original_rank": 22, "current_price": null}, {"ticker": "WMT", "total_volume": 316005, "put_volume": 40027, "call_volume": 275978, "cp_volume_ratio": 6.89, "total_transactions": 25386, "avg_trade_size": 12.4, "contracts_count": 581, "put_contracts": 253, "call_contracts": 328, "total_oi": 1371794, "put_oi": 498951, "call_oi": 872843, "cp_oi_ratio": 1.75, "leap_cp_ratio": 1.69, "top_3_contracts_volume": [{"ticker": "261120C115", "volume": 109854, "strike": 115.0, "expiry": "261120", "type": "call", "percentage": 34.8}, {"ticker": "261120C120", "volume": 107572, "strike": 120.0, "expiry": "261120", "type": "call", "percentage": 34.0}, {"ticker": "261016C115", "volume": 7296, "strike": 115.0, "expiry": "261016", "type": "call", "percentage": 2.3}], "top_3_leap_volume": [{"ticker": "270115C125", "volume": 2480, "strike": 125.0, "expiry": "270115", "type": "call", "percentage": 0.8}, {"ticker": "270115C120", "volume": 2445, "strike": 120.0, "expiry": "270115", "type": "call", "percentage": 0.8}, {"ticker": "270115P100", "volume": 1784, "strike": 100.0, "expiry": "270115", "type": "put", "percentage": 0.6}], "top_3_oi": [{"ticker": "O:WMT261120C00120000", "oi": 118906, "strike": 120, "expiry": "2026-11-20", "type": "call", "percentage": 8.7}, {"ticker": "O:WMT261120C00125000", "oi": 114823, "strike": 125, "expiry": "2026-11-20", "type": "call", "percentage": 8.4}, {"ticker": "O:WMT261120C00115000", "oi": 57355, "strike": 115, "expiry": "2026-11-20", "type": "call", "percentage": 4.2}], "top_3_leap_oi": [{"ticker": "O:WMT270115C00135000", "oi": 17242, "strike": 135, "expiry": "2027-01-15", "type": "call", "percentage": 1.3}, {"ticker": "O:WMT270115P00100000", "oi": 16810, "strike": 100, "expiry": "2027-01-15", "type": "put", "percentage": 1.2}, {"ticker": "O:WMT270115P00105000", "oi": 15572, "strike": 105, "expiry": "2027-01-15", "type": "put", "percentage": 1.1}], "strike_concentration": {"range": "120-130", "oi": 352764, "percentage": 25.7, "dominant_strike": 120}, "history": {"appearances": 1, "appearance_rate": 10.0, "avg_rank": 23.0, "best_rank": 23, "worst_rank": 23, "today_rank": 23, "rank_change": 0, "trend": "stable", "streak": 0, "icon": "[NEW]"}, "original_rank": 23, "current_price": null}, {"ticker": "WULF", "total_volume": 312062, "put_volume": 50248, "call_volume": 261814, "cp_volume_ratio": 5.21, "total_transactions": 16210, "avg_trade_size": 19.3, "contracts_count": 501, "put_contracts": 196, "call_contracts": 305, "total_oi": 3133891, "put_oi": 870127, "call_oi": 2263764, "cp_oi_ratio": 2.6, "leap_cp_ratio": 24.61, "top_3_contracts_volume": [{"ticker": "270115C13", "volume": 27244, "strike": 13.0, "expiry": "270115", "type": "call", "percentage": 8.7}, {"ticker": "261016C14", "volume": 22518, "strike": 14.0, "expiry": "261016", "type": "call", "percentage": 7.2}, {"ticker": "261016C13", "volume": 15684, "strike": 13.5, "expiry": "261016", "type": "call", "percentage": 5.0}], "top_3_leap_volume": [{"ticker": "270115C13", "volume": 27244, "strike": 13.0, "expiry": "270115", "type": "call", "percentage": 8.7}, {"ticker": "270115C17", "volume": 10940, "strike": 17.0, "expiry": "270115", "type": "call", "percentage": 3.5}, {"ticker": "270115C20", "volume": 8979, "strike": 20.0, "expiry": "270115", "type": "call", "percentage": 2.9}], "top_3_oi": [{"ticker": "O:WULF261016P00009000", "oi": 121247, "strike": 9, "expiry": "2026-10-16", "type": "put", "percentage": 3.9}, {"ticker": "O:WULF270115C00023000", "oi": 86784, "strike": 23, "expiry": "2027-01-15", "type": "call", "percentage": 2.8}, {"ticker": "O:WULF270115C00018000", "oi": 80890, "strike": 18, "expiry": "2027-01-15", "type": "call", "percentage": 2.6}], "top_3_leap_oi": [{"ticker": "O:WULF270115C00023000", "oi": 86784, "strike": 23, "expiry": "2027-01-15", "type": "call", "percentage": 2.8}, {"ticker": "O:WULF270115C00018000", "oi": 80890, "strike": 18, "expiry": "2027-01-15", "type": "call", "percentage": 2.6}, {"ticker": "O:WULF270115C00025000", "oi": 70571, "strike": 25, "expiry": "2027-01-15", "type": "call", "percentage": 2.3}], "strike_concentration": {"range": "25-30", "oi": 383138, "percentage": 12.2, "dominant_strike": 25}, "history": {"appearances": 1, "appearance_rate": 10.0, "avg_rank": 22.0, "best_rank": 22, "worst_rank": 22, "today_rank": 22, "rank_change": 0, "trend": "stable", "streak": 0, "icon": "[NEW]"}, "original_rank": 24, "current_price": null}, {"ticker": "ORCL", "total_volume": 299666, "put_volume": 107986, "call_volume": 191680, "cp_volume_ratio": 1.78, "total_transactions": 55341, "avg_trade_size": 5.4, "contracts_count": 1347, "put_contracts": 603, "call_contracts": 744, "total_oi": 3646768, "put_oi": 1653307, "call_oi": 1993461, "cp_oi_ratio": 1.21, "leap_cp_ratio": 1.2, "top_3_contracts_volume": [{"ticker": "261016C150", "volume": 17637, "strike": 150.0, "expiry": "261016", "type": "call", "percentage": 5.9}, {"ticker": "261016C145", "volume": 12933, "strike": 145.0, "expiry": "261016", "type": "call", "percentage": 4.3}, {"ticker": "261016C140", "volume": 9039, "strike": 140.0, "expiry": "261016", "type": "call", "percentage": 3.0}], "top_3_leap_volume": [{"ticker": "270219P110", "volume": 4489, "strike": 110.0, "expiry": "270219", "type": "put", "percentage": 1.5}, {"ticker": "270219C200", "volume": 3673, "strike": 200.0, "expiry": "270219", "type": "call", "percentage": 1.2}, {"ticker": "270219C155", "volume": 3657, "strike": 155.0, "expiry": "270219", "type": "call", "percentage": 1.2}], "top_3_oi": [{"ticker": "O:ORCL261016C00160000", "oi": 47389, "strike": 160, "expiry": "2026-10-16", "type": "call", "percentage": 1.3}, {"ticker": "O:ORCL261016C00155000", "oi": 45176, "strike": 155, "expiry": "2026-10-16", "type": "call", "percentage": 1.2}, {"ticker": "O:ORCL261218C00250000", "oi": 37612, "strike": 250, "expiry": "2026-12-18", "type": "call", "percentage": 1.0}], "top_3_leap_oi": [{"ticker": "O:ORCL270115C00200000", "oi": 33844, "strike": 200, "expiry": "2027-01-15", "type": "call", "percentage": 0.9}, {"ticker": "O:ORCL270115C00300000", "oi": 29141, "strike": 300, "expiry": "2027-01-15", "type": "call", "percentage": 0.8}, {"ticker": "O:ORCL271217P00100000", "oi": 24651, "strike": 100, "expiry": "2027-12-17", "type": "put", "percentage": 0.7}], "strike_concentration": {"range": "150-160", "oi": 371163, "percentage": 10.2, "dominant_strike": 150}, "history": {"appearances": 4, "appearance_rate": 40.0, "avg_rank": 20.0, "best_rank": 13, "worst_rank": 26, "today_rank": 25, "rank_change": -9, "trend": "falling", "streak": 0, "icon": "[OCC]"}, "original_rank": 25, "current_price": null}];
+
+        let indexSortColumn = 'ticker';
+        let indexSortOrder = 'asc';
+        let stockSortColumn = 'leap_cp_ratio';
+        let stockSortOrder = 'desc';
+
+        // Table sorting function
+        function sortTable(tableType, column, type) {
+            const tableData = tableType === 'index' ? indexData : stockData;
+            const currentSortColumn = tableType === 'index' ? indexSortColumn : stockSortColumn;
+            const currentSortOrder = tableType === 'index' ? indexSortOrder : stockSortOrder;
+            // Toggle sort order if clicking same column
+            let newSortOrder;
+            if (currentSortColumn === column) {
+                newSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                newSortOrder = 'desc'; // Default to descending
+            }
+
+            // Update state
+            if (tableType === 'index') {
+                indexSortColumn = column;
+                indexSortOrder = newSortOrder;
+            } else {
+                stockSortColumn = column;
+                stockSortOrder = newSortOrder;
+            }
+
+            // Sort data
+            const sortedData = [...tableData].sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+
+                // Handle string comparison
+                if (type === 'string') {
+                    valA = String(valA).toLowerCase();
+                    valB = String(valB).toLowerCase();
+                    return newSortOrder === 'asc'
+                        ? valA.localeCompare(valB)
+                        : valB.localeCompare(valA);
+                }
+
+                // Handle number comparison
+                valA = Number(valA) || 0;
+                valB = Number(valB) || 0;
+                return newSortOrder === 'asc' ? valA - valB : valB - valA;
+            });
+
+            // Update table
+            renderTable(tableType, sortedData);
+
+            // Update sort indicators (only for this table)
+            const tableSelector = tableType === 'index' ? '#indexTable' : '#stockTable';
+            document.querySelectorAll(`${tableSelector} th.sortable`).forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            const activeHeader = document.querySelector(`${tableSelector} th[data-column="${column}"]`);
+            if (activeHeader) {
+                activeHeader.classList.add(`sorted-${newSortOrder}`);
+            }
+        }
+
+        // Helper: Format contract short form (e.g., 250131C600)
+        function formatContractShort(contract) {
+            try {
+                let expiry = contract.expiry || '';
+                if (expiry) {
+                    // Extract YYMMDD from 2025-01-31
+                    expiry = expiry.replace(/-/g, '').slice(-6);
+                }
+                const contractType = (contract.type || 'X')[0].toUpperCase();
+                const strike = Math.floor(contract.strike || 0);
+                return `${expiry}${contractType}${strike}`;
+            } catch (e) {
+                return 'N/A';
+            }
+        }
+
+        // C/P ratio color class
+        function getCpClass(value) {
+            if (value >= 10) return 'cp-extreme-bull';
+            if (value >= 2.0) return 'cp-strong-bull';
+            if (value >= 1.5) return 'cp-bull';
+            if (value >= 1.0) return 'cp-neutral';
+            if (value >= 0.8) return 'cp-slight-bear';
+            if (value >= 0.5) return 'cp-bear';
+            return 'cp-extreme-bear';
+        }
+
+        // Contract type color class
+        function getContractTypeClass(contract) {
+            const t = (contract.type || '')[0].toUpperCase();
+            if (t === 'C') return 'contract-call';
+            if (t === 'P') return 'contract-put';
+            return '';
+        }
+
+        // Render table with data
+        function renderTable(tableType, data) {
+            const tbodyId = tableType === 'index' ? 'indexTableBody' : 'stockTableBody';
+            const tbody = document.getElementById(tbodyId);
+            tbody.innerHTML = '';
+
+            data.forEach((item, idx) => {
+                // Format volume and OI in 万 (W) with 2 decimal places
+                const volumeW = (item.total_volume / 10000).toFixed(2) + 'W';
+                const oiW = (item.total_oi / 10000).toFixed(2) + 'W';
+                const currentPrice = item.current_price;
+
+                const row = document.createElement('tr');
+
+                // For stock table, include LEAP C/P column and Top 1 columns
+                if (tableType === 'stock') {
+                    const leapCp = item.leap_cp_ratio || 0;
+                    const leapCpHtml = leapCp ? `<span class="${getCpClass(leapCp)}">${leapCp.toFixed(2)}</span>` : '-';
+
+                    // Format Top 1 Volume
+                    let top1VolumeHtml = '';
+                    if (currentPrice) {
+                        top1VolumeHtml += `<div><small>Current: $${currentPrice.toFixed(2)}</small></div>`;
+                    }
+                    const top3ContractsVolume = item.top_3_contracts_volume || [];
+                    top3ContractsVolume.slice(0, 1).forEach((contract) => {
+                        const ticker = contract.ticker || 'N/A';
+                        const typeClass = getContractTypeClass(contract);
+                        const volumeK = (contract.volume || 0) / 1000;
+                        const pct = contract.percentage || 0;
+                        top1VolumeHtml += `<div class='contract-item'><span class='${typeClass}'>${ticker}</span> <span class='oi-badge'>${Math.round(volumeK)}K (${pct.toFixed(1)}%)</span></div>`;
+                    });
+                    if (!top1VolumeHtml || top3ContractsVolume.length === 0) {
+                        top1VolumeHtml = '<small>N/A</small>';
+                    }
+
+                    // Format Top 1 Volume Leap
+                    let top1LeapVolumeHtml = '';
+                    if (currentPrice) {
+                        top1LeapVolumeHtml += `<div><small>Current: $${currentPrice.toFixed(2)}</small></div>`;
+                    }
+                    const top3LeapVolume = item.top_3_leap_volume || [];
+                    top3LeapVolume.slice(0, 1).forEach((contract) => {
+                        const ticker = contract.ticker || 'N/A';
+                        const typeClass = getContractTypeClass(contract);
+                        const volumeK = (contract.volume || 0) / 1000;
+                        const pct = contract.percentage || 0;
+                        top1LeapVolumeHtml += `<div class='contract-item'><span class='${typeClass}'>${ticker}</span> <span class='oi-badge'>${Math.round(volumeK)}K (${pct.toFixed(1)}%)</span></div>`;
+                    });
+                    if (!top1LeapVolumeHtml || top3LeapVolume.length === 0) {
+                        top1LeapVolumeHtml = '<small>N/A</small>';
+                    }
+
+                    // Format Top 1 OI
+                    let top1OIHtml = '';
+                    if (currentPrice) {
+                        top1OIHtml += `<div><small>Current: $${currentPrice.toFixed(2)}</small></div>`;
+                    }
+                    const top3OI = item.top_3_oi || [];
+                    top3OI.slice(0, 1).forEach((contract) => {
+                        const ticker = contract.ticker || 'N/A';
+                        const typeClass = getContractTypeClass(contract);
+                        const oiK = (contract.oi || 0) / 1000;
+                        const pct = contract.percentage || 0;
+                        top1OIHtml += `<div class='contract-item'><span class='${typeClass}'>${ticker}</span> <span class='oi-badge'>${Math.round(oiK)}K (${pct.toFixed(1)}%)</span></div>`;
+                    });
+                    if (!top1OIHtml || top3OI.length === 0) {
+                        top1OIHtml = '<small>N/A</small>';
+                    }
+
+                    // Row class for extreme C/P
+                    const cpVol = item.cp_volume_ratio;
+                    if (cpVol < 0.5) row.className = 'row-extreme-bear';
+                    else if (cpVol >= 10) row.className = 'row-extreme-bull';
+
+                    row.innerHTML = `
+                        <td>${item.original_rank}</td>
+                        <td><strong>${item.ticker}</strong></td>
+                        <td><span class="${getCpClass(cpVol)}">${cpVol.toFixed(2)}</span></td>
+                        <td>${leapCpHtml}</td>
+                        <td><span class="${getCpClass(item.cp_oi_ratio)}">${item.cp_oi_ratio.toFixed(2)}</span></td>
+                        <td class="compact-cell">${top1VolumeHtml}</td>
+                        <td class="compact-cell">${top1LeapVolumeHtml}</td>
+                        <td class="compact-cell">${top1OIHtml}</td>
+                    `;
+                } else {
+                    // Index table - only show: Rank, Ticker, C/P Volume
+                    const cpVol = item.cp_volume_ratio;
+                    if (cpVol < 0.5) row.className = 'row-extreme-bear';
+                    else if (cpVol >= 10) row.className = 'row-extreme-bull';
+
+                    row.innerHTML = `
+                        <td>${item.original_rank}</td>
+                        <td><strong>${item.ticker}</strong></td>
+                        <td><span class="${getCpClass(cpVol)}">${cpVol.toFixed(2)}</span></td>
+                    `;
+                }
+
+                tbody.appendChild(row);
+            });
+        }
+
+        // Add click handlers to sortable headers
+        document.addEventListener('DOMContentLoaded', () => {
+            // Setup sorting for index table
+            document.querySelectorAll('#indexTable th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const column = th.dataset.column;
+                    const type = th.dataset.type;
+                    sortTable('index', column, type);
+                });
+            });
+
+            // Setup sorting for stock table
+            document.querySelectorAll('#stockTable th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const column = th.dataset.column;
+                    const type = th.dataset.type;
+                    sortTable('stock', column, type);
+                });
+            });
+
+            // Set initial sort indicators for both tables
+            const indexHeader = document.querySelector('#indexTable th[data-column="ticker"]');
+            if (indexHeader) {
+                indexHeader.classList.add('sorted-asc');
+            }
+            const stockHeader = document.querySelector('#stockTable th[data-column="leap_cp_ratio"]');
+            if (stockHeader) {
+                stockHeader.classList.add('sorted-desc');
+            }
+        });
+
+        // Combined Volume & OI Chart
+        const volumeData = [1762281, 1202012, 985895, 966431, 925198, 893648, 835079, 700458, 530812, 523956, 497106, 459172, 450747, 423866, 422907, 385162, 369222, 364112, 337937, 334230, 324420, 319981, 316005, 312062, 299666];
+        const oiData = [10564440, 4414749, 3884482, 879035, 3258743, 862335, 6797903, 11417521, 10568438, 4982319, 698962, 3275713, 1867851, 11463495, 2416596, 2532845, 4095102, 2946481, 6702653, 3211033, 6226039, 3586170, 1371794, 3133891, 3646768];
+        const volumeOICtx = document.getElementById('volumeOIChart').getContext('2d');
+
+        new Chart(volumeOICtx, {
+            type: 'bar',
+            data: {
+                labels: ["NVDA", "AAPL", "SPCX", "MU", "TSLA", "META", "INTC", "TLT", "HYG", "AMZN", "AMD", "MSFT", "CIFR", "EWZ", "GOOGL", "DRAM", "SOFI", "CRWV", "IBIT", "IREN", "XLF", "PLTR", "WMT", "WULF", "ORCL"],
+                datasets: [
+                    {
+                        label: '总成交量',
+                        data: volumeData,
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: '持仓量',
+                        data: oiData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '成交量 & 持仓量对比'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // C/P Ratio Chart
+        const cpCtx = document.getElementById('cpRatioChart').getContext('2d');
+        new Chart(cpCtx, {
+            type: 'bar',
+            data: {
+                labels: ["NVDA", "AAPL", "SPCX", "MU", "TSLA", "META", "INTC", "TLT", "HYG", "AMZN", "AMD", "MSFT", "CIFR", "EWZ", "GOOGL", "DRAM", "SOFI", "CRWV", "IBIT", "IREN", "XLF", "PLTR", "WMT", "WULF", "ORCL"],
+                datasets: [
+                    {
+                        label: 'C/P 成交比',
+                        data: [1.24, 1.86, 1.85, 1.65, 1.36, 1.35, 1.93, 1.39, 0.71, 2.43, 1.46, 1.68, 4.07, 1.3, 3.22, 1.76, 4.33, 0.91, 0.91, 1.89, 0.98, 1.18, 6.89, 5.21, 1.78],
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'C/P 持仓比',
+                        data: [1.02, 1.33, 0.97, 1.04, 1.52, 1.46, 1.11, 1.9, 0.36, 1.44, 0.94, 1.76, 3.03, 2.72, 1.68, 1.79, 1.88, 1.06, 1.41, 1.25, 0.71, 0.89, 1.75, 2.6, 1.21],
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Call/Put 比例对比'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
